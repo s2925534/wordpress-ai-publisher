@@ -40,6 +40,12 @@ export default function HomePage() {
             >
               Open settings
             </Link>
+            <Link
+              href="/site-discovery"
+              className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-500"
+            >
+              Site discovery
+            </Link>
           </div>
         </section>
 
@@ -47,7 +53,7 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>What is included</CardTitle>
-              <CardDescription>Foundation pieces ready for the next phase.</CardDescription>
+              <CardDescription>Foundation pieces plus WordPress discovery plumbing.</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 text-sm text-slate-700">

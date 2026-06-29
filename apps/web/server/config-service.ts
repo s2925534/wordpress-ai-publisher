@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -41,10 +42,14 @@ function resolveConfigPath(configDir: string, segments: string[]) {
 }
 
 export class ConfigService {
-  constructor(private readonly configDir: string) {}
+  private readonly resolvedConfigDir: string;
+
+  constructor(private readonly configDir: string) {
+    this.resolvedConfigDir = resolveConfigDir(configDir);
+  }
 
   async loadSiteConfig(siteKey: string): Promise<SiteConfig> {
-    const sitePath = resolveConfigPath(this.configDir, ['sites', `${siteKey}.json`]);
+    const sitePath = resolveConfigPath(this.resolvedConfigDir, ['sites', `${siteKey}.json`]);
     const parsed = siteConfigSchema.safeParse(await readJsonFile(sitePath));
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
@@ -56,7 +61,7 @@ export class ConfigService {
   }
 
   async loadContentProfile(profileKey: string): Promise<ContentProfileConfig> {
-    const profilePath = resolveConfigPath(this.configDir, ['content-profiles', `${profileKey}.json`]);
+    const profilePath = resolveConfigPath(this.resolvedConfigDir, ['content-profiles', `${profileKey}.json`]);
     const parsed = contentProfileSchema.safeParse(await readJsonFile(profilePath));
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
@@ -70,21 +75,21 @@ export class ConfigService {
   async validateAll(): Promise<ConfigValidationReport> {
     const issues: ConfigValidationIssue[] = [];
 
-    for (const file of await listJsonFiles(path.join(this.configDir, 'sites'))) {
+    for (const file of await listJsonFiles(path.join(this.resolvedConfigDir, 'sites'))) {
       const result = siteConfigSchema.safeParse(await readJsonFile(file));
       if (!result.success) {
         issues.push(...formatIssues(file, result.error.issues));
       }
     }
 
-    for (const file of await listJsonFiles(path.join(this.configDir, 'content-profiles'))) {
+    for (const file of await listJsonFiles(path.join(this.resolvedConfigDir, 'content-profiles'))) {
       const result = contentProfileSchema.safeParse(await readJsonFile(file));
       if (!result.success) {
         issues.push(...formatIssues(file, result.error.issues));
       }
     }
 
-    for (const file of await listJsonFiles(path.join(this.configDir, 'global'))) {
+    for (const file of await listJsonFiles(path.join(this.resolvedConfigDir, 'global'))) {
       const base = path.basename(file);
       const data = await readJsonFile(file);
 
@@ -123,4 +128,22 @@ async function listJsonFiles(directory: string) {
   } catch {
     return [];
   }
+}
+
+function resolveConfigDir(configDir: string) {
+  if (path.isAbsolute(configDir)) {
+    return configDir;
+  }
+
+  const direct = path.resolve(process.cwd(), configDir);
+  if (existsSync(direct)) {
+    return direct;
+  }
+
+  const repoRootCandidate = path.resolve(process.cwd(), '..', '..', configDir);
+  if (existsSync(repoRootCandidate)) {
+    return repoRootCandidate;
+  }
+
+  return direct;
 }

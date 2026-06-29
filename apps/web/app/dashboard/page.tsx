@@ -30,6 +30,12 @@ export default function DashboardPage() {
             >
               Home
             </Link>
+            <Link
+              href="/site-discovery"
+              className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-500"
+            >
+              Site discovery
+            </Link>
           </div>
         </header>
 

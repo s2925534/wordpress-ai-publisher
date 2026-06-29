@@ -1,0 +1,87 @@
+import Link from 'next/link';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DiscoveryClient } from '@/app/site-discovery/discovery-client';
+import { DiscoveryService } from '@/server/discovery-service';
+
+const siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site';
+
+export default async function SiteDiscoveryPage() {
+  const service = new DiscoveryService(process.env.CONFIG_DIR ?? './config');
+  const site = await service.getDefaultSiteRecord();
+  const snapshot = await service.getLatestSnapshot(siteKey);
+
+  return (
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8">
+        <header className="rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-soft backdrop-blur">
+          <Badge>Phase 4 discovery</Badge>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight">Site discovery</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+            This page caches the selected WordPress site structure so the app can reuse live
+            categories, tags, authors, and Jetpack status without assuming a generic WordPress
+            setup.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/settings"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-200"
+            >
+              Settings
+            </Link>
+          </div>
+        </header>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Selected site</CardTitle>
+            <CardDescription>
+              {site.name} · {site.siteUrl}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-slate-700">
+            Last discovery data is cached locally and can be refreshed from the selected plugin.
+          </CardContent>
+        </Card>
+
+        <DiscoveryClient
+          siteKey={siteKey}
+          initialSnapshot={
+            snapshot
+              ? {
+                  siteName: snapshot.siteName,
+                  siteUrl: snapshot.siteUrl,
+                  timezone: snapshot.timezone,
+                  locale: snapshot.locale,
+                  restApiAvailable: snapshot.restApiAvailable,
+                  categories: Array.isArray(snapshot.categories) ? (snapshot.categories as Array<{ id: number; name: string }>) : [],
+                  tags: Array.isArray(snapshot.tags) ? (snapshot.tags as Array<{ id: number; name: string }>) : [],
+                  authors: Array.isArray(snapshot.authors) ? (snapshot.authors as Array<{ id: number; name: string }>) : [],
+                  recentPosts: Array.isArray(snapshot.recentPosts) ? (snapshot.recentPosts as Array<{ id: number; title: string; status: string }>) : [],
+                  jetpackStatus: {
+                    installed: Boolean((snapshot.jetpackStatus as { installed?: boolean } | null)?.installed),
+                    active: Boolean((snapshot.jetpackStatus as { active?: boolean } | null)?.active),
+                    connected: Boolean((snapshot.jetpackStatus as { connected?: boolean } | null)?.connected),
+                    socialAvailable: Boolean((snapshot.jetpackStatus as { socialAvailable?: boolean } | null)?.socialAvailable)
+                  },
+                  mediaSettings: {
+                    maxUploadSize: (snapshot.mediaSettings as { maxUploadSize?: number | null } | null)?.maxUploadSize ?? null,
+                    mimeTypes: Array.isArray((snapshot.mediaSettings as { mimeTypes?: string[] } | null)?.mimeTypes)
+                      ? (snapshot.mediaSettings as { mimeTypes?: string[] }).mimeTypes ?? []
+                      : []
+                  }
+                }
+              : null
+          }
+        />
+      </div>
+    </main>
+  );
+}

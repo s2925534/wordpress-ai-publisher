@@ -16,7 +16,9 @@ MIT License. Provided free of charge, without warranty.
 
 Phase 2 added the Prisma data model, a settings dashboard, a settings screen, and a default content profile seed.
 
-Phase 3 adds the WordPress plugin scaffold and REST endpoint structure.
+Phase 3 added the WordPress plugin scaffold and REST endpoint structure.
+
+Phase 4 adds WordPress site discovery, cached discovery snapshots, and a refreshable discovery UI.
 
 ## Quick start
 
