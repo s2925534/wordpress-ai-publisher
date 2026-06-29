@@ -13,4 +13,12 @@ class Publisher_Jetpack_Service {
             'socialAvailable' => false,
         );
     }
+
+    public function get_social_connections() {
+        if (!$this->get_status()['installed']) {
+            return array();
+        }
+
+        return array();
+    }
 }

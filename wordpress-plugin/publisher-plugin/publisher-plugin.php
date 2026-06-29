@@ -14,6 +14,7 @@ define('PUBLISHER_PLUGIN_VERSION', '0.1.0');
 define('PUBLISHER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
 require_once PUBLISHER_PLUGIN_DIR . 'includes/class-auth.php';
+require_once PUBLISHER_PLUGIN_DIR . 'includes/class-response.php';
 require_once PUBLISHER_PLUGIN_DIR . 'includes/class-site-discovery.php';
 require_once PUBLISHER_PLUGIN_DIR . 'includes/class-post-service.php';
 require_once PUBLISHER_PLUGIN_DIR . 'includes/class-media-service.php';

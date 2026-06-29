@@ -14,7 +14,9 @@ MIT License. Provided free of charge, without warranty.
 
 ## Current Scope
 
-Phase 2 adds the Prisma data model, a settings dashboard, a settings screen, a default content profile seed, and a WordPress plugin scaffold with REST endpoint structure.
+Phase 2 added the Prisma data model, a settings dashboard, a settings screen, and a default content profile seed.
+
+Phase 3 adds the WordPress plugin scaffold and REST endpoint structure.
 
 ## Quick start
 
