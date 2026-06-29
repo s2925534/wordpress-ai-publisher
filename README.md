@@ -12,6 +12,10 @@ MIT License. Provided free of charge, without warranty.
 - Email: `pedro@veloso.dev`
 - Project remote: `https://github.com/s2925534/wordpress-ai-publisher.git`
 
+## Current Scope
+
+Phase 2 adds the Prisma data model, a settings dashboard, a settings screen, a default content profile seed, and a WordPress plugin scaffold with REST endpoint structure.
+
 ## Quick start
 
 Run:

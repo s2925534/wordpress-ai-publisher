@@ -84,6 +84,8 @@ ensure_value_exists CONFIG_DIR "./config"
 ensure_value_exists DEFAULT_SITE_KEY "default-site"
 ensure_value_exists DEFAULT_CONTENT_PROFILE_KEY "linkedin-blog-package"
 
+cp .env apps/web/.env
+
 read -r -p "Enter your WordPress site URL: " site_url
 if ! node -e "try { const url = new URL(process.argv[1]); if (!/^https?:$/.test(url.protocol)) throw new Error(); } catch { process.exit(1); }" "$site_url"; then
   echo "Invalid URL."

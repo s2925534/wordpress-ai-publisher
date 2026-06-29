@@ -14,7 +14,12 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-slate-700 hover:bg-slate-100'
 };
 
-export function Button({ className, variant = 'default', type = 'button', ...props }: ButtonProps) {
+export function Button({
+  className,
+  variant = 'default',
+  type = 'button',
+  ...props
+}: ButtonProps) {
   return (
     <button
       type={type}

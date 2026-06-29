@@ -1,5 +1,6 @@
+import Link from 'next/link';
+
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const phaseOneSteps = [
@@ -27,8 +28,18 @@ export default function HomePage() {
             workflow for a future WordPress publishing assistant.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button>Open quick start</Button>
-            <Button variant="secondary">Validate config</Button>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            >
+              Open dashboard
+            </Link>
+            <Link
+              href="/settings"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-200"
+            >
+              Open settings
+            </Link>
           </div>
         </section>
 

@@ -7,6 +7,224 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum SiteStatus {
+  active
+  inactive
+  error
+}
+
+enum SourceSafetyType {
+  my_own_text
+  public_reference
+  third_party_text
+  notes_only
+  unknown
+}
+
+enum GenerationStatus {
+  draft
+  generating
+  ready
+  failed
+}
+
+enum PostStatus {
+  draft
+  publish
+  future
+  pending
+  private
+}
+
+enum AltTextStatus {
+  missing
+  draft
+  approved
+}
+
+enum ImageApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum SocialStatus {
+  skipped
+  unavailable
+  queued
+  sent
+  failed
+}
+
+enum ValidationType {
+  content
+  seo
+  image
+  publication
+}
+
+model WordPressSite {
+  id                         String                  @id @default(cuid())
+  siteKey                    String                  @unique
+  name                       String
+  siteUrl                    String
+  username                   String?
+  encryptedApplicationPassword String?
+  encryptedPluginToken       String?
+  defaultStatus              PostStatus              @default(draft)
+  status                     SiteStatus              @default(active)
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+  snapshots                  WordPressSiteSnapshot[]
+  generationRequests         GenerationRequest[]
+  generatedPublicationPackages GeneratedPublicationPackage[]
+  publishingAttempts         PublishingAttempt[]
+}
+
+model WordPressSiteSnapshot {
+  id                   String   @id @default(cuid())
+  wordpressSiteId      String
+  discoveredAt         DateTime @default(now())
+  siteName             String
+  siteUrl              String
+  timezone             String?
+  locale               String?
+  restApiAvailable     Boolean  @default(false)
+  canCreatePosts       Boolean  @default(false)
+  canPublishPosts      Boolean  @default(false)
+  canUploadMedia       Boolean  @default(false)
+  canCreateCategories  Boolean  @default(false)
+  canCreateTags        Boolean  @default(false)
+  availablePostTypes   Json?
+  availablePostStatuses Json?
+  categories           Json?
+  tags                 Json?
+  authors              Json?
+  jetpackStatus        Json?
+  seoPluginStatus      Json?
+  mediaSettings        Json?
+  recentPosts          Json?
+  rawDiscovery         Json?
+  wordpressSite        WordPressSite @relation(fields: [wordpressSiteId], references: [id], onDelete: Cascade)
+}
+
+model ContentProfile {
+  id            String   @id @default(cuid())
+  profileKey    String   @unique
+  siteId        String?
+  name          String
+  description   String
+  outputOrder   Json
+  brandContext  Json?
+  topicFocus    Json?
+  writingRules  Json?
+  hashtagRules  Json?
+  categoryRules Json?
+  imageRules    Json?
+  seoRules      Json?
+  urlRules      Json?
+  qualityRules  Json?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  generationRequests GenerationRequest[]
+  generatedPublicationPackages GeneratedPublicationPackage[]
+}
+
+model GenerationRequest {
+  id                String   @id @default(cuid())
+  inputText         String
+  sourceNotes       String?
+  sourceSafetyType  SourceSafetyType
+  contentProfileId  String
+  wordpressSiteId   String
+  status           GenerationStatus @default(draft)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  contentProfile   ContentProfile    @relation(fields: [contentProfileId], references: [id], onDelete: Restrict)
+  wordpressSite    WordPressSite     @relation(fields: [wordpressSiteId], references: [id], onDelete: Cascade)
+  generatedPublicationPackage GeneratedPublicationPackage?
+}
+
+model GeneratedPublicationPackage {
+  id                    String   @id @default(cuid())
+  generationRequestId   String   @unique
+  wordpressSiteId       String
+  contentProfileId      String
+  title                 String
+  linkedinPost          String
+  articleContent        String?
+  excerpt               String
+  plainCsvTags          String
+  recommendedCategories Json
+  recommendedTags      Json
+  featureImagePrompt    String?
+  featureImageUrl       String?
+  altText               String
+  suggestedImageFileName String
+  seoPackage            Json
+  status                GenerationStatus @default(draft)
+  confirmedAt           DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  generationRequest     GenerationRequest @relation(fields: [generationRequestId], references: [id], onDelete: Cascade)
+  wordpressSite         WordPressSite @relation(fields: [wordpressSiteId], references: [id], onDelete: Cascade)
+  contentProfile        ContentProfile @relation(fields: [contentProfileId], references: [id], onDelete: Restrict)
+  generatedImages       GeneratedImage[]
+  validationSnapshots   ValidationSnapshot[]
+  publishingAttempts    PublishingAttempt[]
+}
+
+model GeneratedImage {
+  id                   String   @id @default(cuid())
+  generatedPackageId   String
+  imagePrompt          String
+  localImageUrl        String?
+  wordpressMediaId     Int?
+  imageFilename        String
+  altText              String
+  caption              String?
+  description          String?
+  altTextStatus        AltTextStatus @default(missing)
+  imageApprovalStatus  ImageApprovalStatus @default(pending)
+  approvedAt           DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  generatedPackage     GeneratedPublicationPackage @relation(fields: [generatedPackageId], references: [id], onDelete: Cascade)
+}
+
+model PublishingAttempt {
+  id                      String   @id @default(cuid())
+  generatedPackageId      String
+  wordpressSiteId         String
+  idempotencyKey          String   @unique
+  wordpressStatus         PostStatus
+  wordpressPostId         Int?
+  wordpressPostUrl        String?
+  socialStatus            SocialStatus
+  socialProvider          String?
+  selectedSocialConnections Json?
+  socialErrorMessage      String?
+  requestPayloadSnapshot  Json
+  responseSnapshot        Json?
+  errorMessage            String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  generatedPackage        GeneratedPublicationPackage @relation(fields: [generatedPackageId], references: [id], onDelete: Cascade)
+  wordpressSite           WordPressSite @relation(fields: [wordpressSiteId], references: [id], onDelete: Cascade)
+}
+
+model ValidationSnapshot {
+  id                  String   @id @default(cuid())
+  generatedPackageId  String
+  validationType      ValidationType
+  passed              Boolean
+  score               Int?
+  results             Json
+  createdAt           DateTime @default(now())
+  generatedPackage    GeneratedPublicationPackage @relation(fields: [generatedPackageId], references: [id], onDelete: Cascade)
+}
+
 model LocalSetting {
   id        String   @id @default(cuid())
   key       String   @unique

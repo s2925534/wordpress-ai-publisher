@@ -1,5 +1,11 @@
 # WordPress Plugin
 
-The plugin is not implemented in Phase 1.
+The plugin scaffold now lives in `wordpress-plugin/publisher-plugin`.
 
-This document will be expanded when the custom REST endpoints and token authentication are added.
+It includes:
+- token validation scaffolding
+- REST controller registration
+- site discovery helpers
+- media, post, and Jetpack service placeholders
+
+The next phase will fill in the endpoint behavior, capability checks, and payload mapping against the WordPress REST API.
