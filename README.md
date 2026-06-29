@@ -2,6 +2,16 @@
 
 Phase 1 foundation for a generic WordPress AI publishing assistant.
 
+## License
+
+MIT License. Provided free of charge, without warranty.
+
+## Developer Information
+
+- Developer: Pedro Veloso
+- Email: `pedro@veloso.dev`
+- Project remote: `https://github.com/s2925534/wordpress-ai-publisher.git`
+
 ## Quick start
 
 Run:
