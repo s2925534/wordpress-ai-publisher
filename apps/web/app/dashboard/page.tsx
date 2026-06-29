@@ -36,6 +36,12 @@ export default function DashboardPage() {
             >
               Site discovery
             </Link>
+            <Link
+              href="/new-package"
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+            >
+              New package
+            </Link>
           </div>
         </header>
 
@@ -63,6 +69,7 @@ export default function DashboardPage() {
             <CardContent className="space-y-3 text-sm text-slate-700">
               <p>Discover the selected WordPress site.</p>
               <p>Generate the publication package and SEO package.</p>
+              <p>Preview and edit the generated package before any publishing step.</p>
               <p>Assign categories, tags, and featured image with alt text.</p>
               <p>Confirm before draft creation or publishing.</p>
             </CardContent>

@@ -20,6 +20,8 @@ Phase 3 added the WordPress plugin scaffold and REST endpoint structure.
 
 Phase 4 adds WordPress site discovery, cached discovery snapshots, and a refreshable discovery UI.
 
+Phase 5 adds the AI provider foundation, validated publication package schemas, and a basic package generator UI.
+
 ## Quick start
 
 Run:
