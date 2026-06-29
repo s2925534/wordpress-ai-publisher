@@ -2,6 +2,7 @@ import { generatedPackageResponseSchema, generationRequestSchema } from '@/lib/g
 import { MockAIProvider, type AIProvider } from '@/server/ai-provider';
 import { ConfigService } from '@/server/config-service';
 import { createDefaultContentProfile, createDefaultSiteConfig } from '@/server/default-config';
+import { RecommendationService } from '@/server/recommendation-service';
 import type { SourceSafetyType } from '@/lib/ai-schemas';
 
 type GeneratePackageInput = {
@@ -14,10 +15,12 @@ type GeneratePackageInput = {
 export class GenerationService {
   private readonly configService: ConfigService;
   private readonly aiProvider: AIProvider;
+  private readonly recommendationService: RecommendationService;
 
   constructor(private readonly configDir: string, aiProvider: AIProvider = new MockAIProvider()) {
     this.configService = new ConfigService(configDir);
     this.aiProvider = aiProvider;
+    this.recommendationService = new RecommendationService(configDir);
   }
 
   async generatePackage(input: GeneratePackageInput) {
@@ -32,7 +35,27 @@ export class GenerationService {
       contentProfile
     });
 
-    return generatedPackageResponseSchema.parse(packageResult);
+    const recommendations = await this.recommendationService.recommend({
+      siteKey: parsed.siteKey,
+      inputText: parsed.inputText,
+      title: packageResult.title,
+      tags: packageResult.recommendedTags
+    });
+
+    return generatedPackageResponseSchema.parse({
+      ...packageResult,
+      recommendedCategories: recommendations.recommendedCategories.length
+        ? recommendations.recommendedCategories
+        : packageResult.recommendedCategories,
+      recommendedTags: recommendations.recommendedTags.length
+        ? recommendations.recommendedTags
+        : packageResult.recommendedTags,
+      plainCsvTags: recommendations.recommendedTags.length
+        ? recommendations.recommendedTags.join(', ')
+        : packageResult.plainCsvTags,
+      tagRecommendations: recommendations.tagRecommendations,
+      suggestedNewCategory: recommendations.suggestedNewCategory
+    });
   }
 
   private async loadSiteConfig(siteKey?: string) {

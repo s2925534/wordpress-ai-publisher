@@ -19,10 +19,28 @@ export const generatedPackageResponseSchema = z.object({
       name: z.string().min(1),
       slug: z.string().min(1).optional(),
       confidence: z.enum(['high', 'medium', 'low', 'none']),
-      reason: z.string().min(1)
+      reason: z.string().min(1),
+      existingCategoryId: z.number().int().positive().optional()
     })
   ),
   recommendedTags: z.array(z.string().min(1)),
+  tagRecommendations: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        confidence: z.enum(['high', 'medium', 'low']),
+        reason: z.string().min(1),
+        existingTagId: z.number().int().positive().optional()
+      })
+    )
+    .optional(),
+  suggestedNewCategory: z
+    .object({
+      name: z.string().min(1),
+      slug: z.string().min(1),
+      reason: z.string().min(1)
+    })
+    .optional(),
   featureImagePrompt: z.string().nullable().optional(),
   altText: z.string().nullable().optional(),
   suggestedImageFileName: z.string().nullable().optional(),

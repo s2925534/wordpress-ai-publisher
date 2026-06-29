@@ -22,6 +22,8 @@ Phase 4 adds WordPress site discovery, cached discovery snapshots, and a refresh
 
 Phase 5 adds the AI provider foundation, validated publication package schemas, and a basic package generator UI.
 
+Phase 6 adds deterministic category and tag recommendation, duplicate detection, and new category suggestions.
+
 ## Quick start
 
 Run:

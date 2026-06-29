@@ -115,7 +115,33 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
             <Detail label="Plain CSV Tags" value={generated.plainCsvTags} />
             <Detail
               label="Recommended Categories"
-              value={generated.recommendedCategories.map((category) => category.name).join(', ')}
+              value={generated.recommendedCategories
+                .map((category) => `${category.name} (${category.confidence})`)
+                .join(', ')}
+            />
+            <Detail
+              label="Category Reasoning"
+              value={generated.recommendedCategories.map((category) => category.reason).join(' ')}
+            />
+            <Detail
+              label="Tag Recommendations"
+              value={
+                generated.tagRecommendations
+                  ?.map((tag) => `${tag.name} (${tag.confidence})`)
+                  .join(', ') ?? generated.recommendedTags.join(', ')
+              }
+            />
+            <Detail
+              label="Duplicate Category Checks"
+              value={generated.suggestedNewCategory ? 'No duplicates detected for the suggested category.' : 'No new category suggested.'}
+            />
+            <Detail
+              label="Suggested New Category"
+              value={
+                generated.suggestedNewCategory
+                  ? `${generated.suggestedNewCategory.name} - ${generated.suggestedNewCategory.reason}`
+                  : 'None'
+              }
             />
             <Detail label="Feature Image" value={generated.featureImagePrompt ?? 'No image prompt'} />
             <Detail label="Alt Text" value={generated.altText ?? 'No alt text'} />
