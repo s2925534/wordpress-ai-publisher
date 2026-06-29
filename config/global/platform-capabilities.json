@@ -1,0 +1,15 @@
+{
+  "wordpress": {
+    "restApi": true,
+    "mediaUpload": true,
+    "categories": true,
+    "tags": true,
+    "authors": true,
+    "jetpackDiscovery": true
+  },
+  "app": {
+    "localDraftStorage": true,
+    "idempotency": true,
+    "encryptedCredentialStorage": true
+  }
+}

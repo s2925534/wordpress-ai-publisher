@@ -1,0 +1,14 @@
+{
+  "requireAltText": true,
+  "allowNoImage": true,
+  "filenameFormat": "lowercase-hyphenated",
+  "style": [
+    "professional",
+    "modern",
+    "meaningful"
+  ],
+  "avoid": [
+    "generic stock-photo style",
+    "text-heavy graphics"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "profileKey": "linkedin-blog-package",
+  "name": "LinkedIn + WordPress Blog Package",
+  "description": "Generates a LinkedIn-ready post and WordPress-ready publication package.",
+  "outputOrder": [
+    "Title",
+    "LinkedIn Post",
+    "Excerpt",
+    "Plain CSV Tags",
+    "Recommended Categories",
+    "Feature Image",
+    "Alt Text",
+    "Suggested Image File Name"
+  ],
+  "writingStyle": {
+    "prefer": [
+      "technically mature",
+      "practical",
+      "credible",
+      "specific",
+      "professionally structured"
+    ],
+    "avoid": [
+      "robotic AI wording",
+      "shallow motivation",
+      "excessive hype",
+      "generic corporate jargon",
+      "clickbait"
+    ]
+  },
+  "sections": {
+    "title": {
+      "required": true,
+      "seoFriendly": true
+    },
+    "linkedinPost": {
+      "required": true,
+      "shortParagraphs": true,
+      "mustEndWithHashtags": true
+    },
+    "excerpt": {
+      "required": true,
+      "maxParagraphs": 3
+    },
+    "plainCsvTags": {
+      "required": true,
+      "noHashtags": true
+    },
+    "recommendedCategories": {
+      "required": true,
+      "useSiteCategories": true
+    },
+    "featureImage": {
+      "required": false,
+      "generatePrompt": true,
+      "generateImage": true
+    },
+    "altText": {
+      "requiredWhenImageExists": true
+    },
+    "suggestedImageFileName": {
+      "requiredWhenImageExists": true,
+      "format": "lowercase-hyphenated"
+    }
+  }
+}

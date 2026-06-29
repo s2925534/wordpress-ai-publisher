@@ -1,0 +1,12 @@
+{
+  "titleTargetLength": {
+    "min": 45,
+    "max": 65
+  },
+  "metaDescriptionTargetLength": {
+    "min": 140,
+    "max": 160
+  },
+  "avoidKeywordStuffing": true,
+  "suggestInternalLinks": true
+}
