@@ -10,6 +10,8 @@ export const generationRequestSchema = z.object({
 });
 
 export const generatedPackageResponseSchema = z.object({
+  packageId: z.string().min(1).optional(),
+  generationRequestId: z.string().min(1).optional(),
   title: z.string().min(1),
   linkedinPost: z.string().min(1),
   excerpt: z.string().min(1),
@@ -44,6 +46,8 @@ export const generatedPackageResponseSchema = z.object({
   featureImagePrompt: z.string().nullable().optional(),
   altText: z.string().nullable().optional(),
   suggestedImageFileName: z.string().nullable().optional(),
+  featureImageUrl: z.string().url().nullable().optional(),
+  imagePreviewUrl: z.string().url().nullable().optional(),
   seoPackage: z.object({
     seoTitle: z.string().min(1),
     slug: z.string().min(1),

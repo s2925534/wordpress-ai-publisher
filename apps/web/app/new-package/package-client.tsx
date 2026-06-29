@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -150,6 +151,14 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
             <Detail label="SEO Slug" value={generated.seoPackage.slug} />
             <Detail label="Meta Description" value={generated.seoPackage.metaDescription} />
             <Detail label="Readiness Score" value={String(generated.seoPackage.readinessScore)} />
+            {generated.packageId ? (
+              <Link
+                href={`/packages/${generated.packageId}`}
+                className="inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+              >
+                Open final confirmation
+              </Link>
+            ) : null}
           </div>
         ) : (
           <p className="mt-4 text-sm text-slate-600">

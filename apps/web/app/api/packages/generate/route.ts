@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 
-import { GenerationService } from '@/server/generation-service';
+import { PackageService } from '@/server/package-service';
 
 function getService() {
-  return new GenerationService(process.env.CONFIG_DIR ?? './config');
+  return new PackageService(process.env.CONFIG_DIR ?? './config');
 }
 
 export async function POST(request: Request) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   const service = getService();
-  const result = await service.generatePackage({
+  const result = await service.generate({
     inputText: body.inputText,
     sourceSafetyType: body.sourceSafetyType,
     siteKey: body.siteKey,

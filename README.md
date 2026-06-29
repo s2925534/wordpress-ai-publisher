@@ -24,6 +24,16 @@ Phase 5 adds the AI provider foundation, validated publication package schemas, 
 
 Phase 6 adds deterministic category and tag recommendation, duplicate detection, and new category suggestions.
 
+Phase 7 adds featured image preparation, alt text validation, and image filename handling.
+
+Phase 8 adds stored publication packages, draft creation, media upload handling, and idempotency protection.
+
+Phase 9 adds Jetpack status fallback handling in the publishing flow.
+
+Phase 10 adds explicit publish and schedule actions through the final confirmation screen.
+
+Phase 11 adds logging, validation, and workflow hardening around the publishing pipeline.
+
 ## Quick start
 
 Run:
