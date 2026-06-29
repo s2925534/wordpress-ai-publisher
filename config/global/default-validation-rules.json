@@ -1,0 +1,7 @@
+{
+  "requireFinalConfirmation": true,
+  "requireImageAltText": true,
+  "requireCategoryConfirmationForNew": true,
+  "enableIdempotency": true,
+  "maxInputCharacters": 8000
+}
