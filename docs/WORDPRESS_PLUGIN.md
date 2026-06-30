@@ -19,8 +19,9 @@ The next phase will build on these endpoints for discovery, publishing, and dupl
 3. In WordPress, go to `Plugins -> Add New -> Upload Plugin` and upload the zip.
 4. Activate the plugin in WordPress.
 5. Generate or copy the plugin token from the `WordPress Site` section in the app settings screen.
-6. Paste that token into the plugin settings in WordPress.
-7. If you are not using the custom plugin yet, you can leave the token empty.
+6. In WordPress admin, go to `Settings -> Publisher Plugin`.
+7. Paste that token into the `Plugin token` field and save it.
+8. If you are not using the custom plugin yet, you can leave the token empty.
 
 ## What the plugin token is for
 
