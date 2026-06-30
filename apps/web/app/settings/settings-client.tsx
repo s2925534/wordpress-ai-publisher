@@ -2,10 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  DEFAULT_AI_PROVIDER,
+  DEFAULT_OPENAI_IMAGE_MODEL,
+  DEFAULT_OPENAI_TEXT_MODEL,
+  IMAGE_MODEL_OPTIONS,
+  TEXT_MODEL_OPTIONS
+} from '@/lib/ai-defaults';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { loadBrowserConfig, saveBrowserConfig } from '@/lib/browser-config-storage';
 
 type SettingsPayload = {
   appUrl: string;
@@ -46,29 +54,13 @@ type Props = {
   initialSettings: SettingsPayload;
 };
 
-const STORAGE_KEY = 'wordpress-ai-publisher.browser-config.v1';
-
-const TEXT_MODEL_OPTIONS = [
-  { value: 'gpt-5.5', label: 'GPT-5.5 (default)' },
-  { value: 'gpt-5.4', label: 'GPT-5.4 (lower cost)' },
-  { value: 'gpt-5.4-mini', label: 'GPT-5.4 mini (budget)' },
-  { value: 'gpt-5.4-nano', label: 'GPT-5.4 nano (lowest cost)' }
-] as const;
-
-const IMAGE_MODEL_OPTIONS = [
-  { value: 'gpt-image-2', label: 'gpt-image-2 (default)' },
-  { value: 'gpt-image-1.5', label: 'gpt-image-1.5 (fallback)' },
-  { value: 'gpt-image-1', label: 'gpt-image-1 (legacy fallback)' },
-  { value: 'gpt-image-1-mini', label: 'gpt-image-1-mini (legacy fallback)' }
-] as const;
-
 export function SettingsClient({ initialSettings }: Props) {
   const [settings, setSettings] = useState(initialSettings);
   const [form, setForm] = useState<SettingsForm>({
-    aiProvider: initialSettings.aiProvider,
+    aiProvider: initialSettings.aiProvider || DEFAULT_AI_PROVIDER,
     openAiApiKey: '',
-    openAiTextModel: initialSettings.openAiTextModel || TEXT_MODEL_OPTIONS[0].value,
-    openAiImageModel: initialSettings.openAiImageModel || IMAGE_MODEL_OPTIONS[0].value,
+    openAiTextModel: initialSettings.openAiTextModel || DEFAULT_OPENAI_TEXT_MODEL,
+    openAiImageModel: initialSettings.openAiImageModel || DEFAULT_OPENAI_IMAGE_MODEL,
     wordpressSiteProtocol: initialSettings.wordpressSiteProtocol,
     wordpressSiteHostname: initialSettings.wordpressSiteHostname,
     wordpressTimezone: initialSettings.wordpressTimezone,
@@ -79,17 +71,31 @@ export function SettingsClient({ initialSettings }: Props) {
   });
   const [message, setMessage] = useState('Settings loaded.');
   const [isSaving, setIsSaving] = useState(false);
+  const [browserConfigLoaded, setBrowserConfigLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const saved = loadBrowserConfig();
-    if (saved) {
-      setForm((current) => ({
-        ...current,
-        ...saved
-      }));
-      setMessage('Loaded browser draft configuration.');
-    }
+    let isMounted = true;
+
+    void loadBrowserConfig<SettingsForm>().then((saved) => {
+      if (!isMounted) {
+        return;
+      }
+
+      if (saved) {
+        setForm((current) => ({
+          ...current,
+          ...saved
+        }));
+        setMessage('Loaded browser draft configuration.');
+      }
+
+      setBrowserConfigLoaded(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -98,8 +104,12 @@ export function SettingsClient({ initialSettings }: Props) {
   }, [form.wordpressSiteHostname, form.wordpressSiteProtocol]);
 
   useEffect(() => {
-    saveBrowserConfig(form);
-  }, [form]);
+    if (!browserConfigLoaded) {
+      return;
+    }
+
+    void saveBrowserConfig(form);
+  }, [browserConfigLoaded, form]);
 
   const timezoneOptions = useMemo(() => buildTimezoneOptions(), []);
 
@@ -160,8 +170,8 @@ export function SettingsClient({ initialSettings }: Props) {
           </div>
           <CardTitle>Setup status</CardTitle>
           <CardDescription>
-            Configuration is edited in the web form, cached in the browser, and saved to the local
-            database when you click save.
+            Configuration is edited in the web form, encrypted in browser storage, and saved to the
+            local database when you click save.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-slate-700">
@@ -306,23 +316,6 @@ export function SettingsClient({ initialSettings }: Props) {
       </div>
     </div>
   );
-}
-
-function loadBrowserConfig(): Partial<SettingsForm> | null {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Partial<SettingsForm>) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveBrowserConfig(config: SettingsForm) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  } catch {
-    // Ignore storage failures; save-to-server still works.
-  }
 }
 
 function buildSiteUrl(protocol: 'http' | 'https', hostname: string) {

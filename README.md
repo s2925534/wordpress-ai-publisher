@@ -37,8 +37,8 @@ Phase 11 adds logging, validation, and workflow hardening around the publishing 
 ## Configuration model
 
 - `.env` is for process-level values: app secrets, database URL, and runtime feature toggles.
-- The settings screen is the primary setup surface for the site URL, protocol, timezone, AI models, and WordPress credentials.
-- The browser keeps a JSON backup of the current setup so the user can export and import configuration.
+- The settings screen is the primary setup surface for the site URL, protocol, timezone, AI provider, AI models, OpenAI API key, and WordPress credentials.
+- The browser keeps an encrypted JSON backup of the current setup so the user can export and import configuration.
 - Site-specific behavior still has JSON defaults under `config/`, but the UI-backed setup is the editable source of truth.
 
 ## Quick start
@@ -49,7 +49,7 @@ Run:
 ./scripts/quick-start.sh
 ```
 
-The script creates the generic local scaffold, installs dependencies when needed, runs Prisma setup, validates config, and starts the dev server. Site-specific setup now happens in the app UI, where you can also export and import a JSON backup of the current configuration.
+The script creates the generic local scaffold, installs dependencies when needed, runs Prisma setup, validates config, and starts the dev server. Setup now happens in the app UI, where you can also export and import an encrypted JSON backup of the current configuration.
 
 ## Available commands
 

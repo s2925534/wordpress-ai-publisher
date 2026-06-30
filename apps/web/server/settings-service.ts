@@ -1,5 +1,10 @@
 import type { PrismaClient } from '@prisma/client';
 
+import {
+  DEFAULT_AI_PROVIDER,
+  DEFAULT_OPENAI_IMAGE_MODEL,
+  DEFAULT_OPENAI_TEXT_MODEL
+} from '@/lib/ai-defaults';
 import { settingsUpdateSchema, type SettingsUpdate } from '@/lib/settings-schemas';
 import { buildSettingsCompletionStatus } from '@/lib/settings-summary';
 import { ConfigService } from '@/server/config-service';
@@ -70,10 +75,10 @@ export class SettingsService {
 
     const values = {
       appUrl: process.env.APP_URL ?? 'http://localhost:3000',
-      aiProvider: aiProvider || process.env.AI_PROVIDER || 'openai',
-      openAiKeyConfigured: hasStoredSecret(openAiApiKey) || Boolean(process.env.OPENAI_API_KEY),
-      openAiTextModel: openAiTextModel || process.env.OPENAI_TEXT_MODEL || '',
-      openAiImageModel: openAiImageModel || process.env.OPENAI_IMAGE_MODEL || '',
+      aiProvider: aiProvider || DEFAULT_AI_PROVIDER,
+      openAiKeyConfigured: hasStoredSecret(openAiApiKey),
+      openAiTextModel: openAiTextModel || DEFAULT_OPENAI_TEXT_MODEL,
+      openAiImageModel: openAiImageModel || DEFAULT_OPENAI_IMAGE_MODEL,
       defaultSiteKey: siteKey,
       wordpressSiteConfigured: Boolean(site.siteHostname),
       wordpressSiteUrl: site.siteUrl,

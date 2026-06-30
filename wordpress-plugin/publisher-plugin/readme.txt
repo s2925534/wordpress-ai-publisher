@@ -11,5 +11,7 @@ Custom REST endpoints for the WordPress AI Publishing Assistant.
 == Description ==
 This plugin is a scaffold for the assistant's REST endpoints, token validation, and discovery helpers.
 
+The plugin token is a shared secret copied from the app settings screen into the WordPress plugin settings. It authorizes requests to the custom REST endpoints.
+
 == Installation ==
 Copy the `publisher-plugin` folder into `wp-content/plugins/` and activate it.

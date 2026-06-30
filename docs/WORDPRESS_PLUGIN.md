@@ -18,6 +18,10 @@ The next phase will build on these endpoints for discovery, publishing, and dupl
 2. Activate the plugin in WordPress.
 3. Copy the plugin token from the app settings screen into the plugin settings in WordPress.
 
+## What the plugin token is for
+
+The plugin token is a shared secret used to authorize calls from the local app to the WordPress plugin's custom REST endpoints. The plugin checks it against the `X-Publisher-Token` header before returning discovery data or accepting publishing requests.
+
 ## Pack the plugin
 
 Run:

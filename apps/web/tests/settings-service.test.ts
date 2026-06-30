@@ -40,12 +40,14 @@ describe('SettingsService', () => {
     const service = new SettingsService('./config', { prisma: prisma as any });
 
     const result = await service.updateSettings({
+      openAiApiKey: 'openai-key',
       wordpressSiteUrl: 'https://veloso.dev',
       wordpressUsername: 'pedro',
       wordpressApplicationPassword: 'app-password',
       wordpressPluginToken: 'plugin-token'
     });
 
+    expect(result.openAiKeyConfigured).toBe(true);
     expect(result.wordpressUsername).toBe('pedro');
     expect(result.wordpressPasswordConfigured).toBe(true);
     expect(result.pluginTokenConfigured).toBe(true);

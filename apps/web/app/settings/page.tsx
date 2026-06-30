@@ -14,7 +14,8 @@ export default async function SettingsPage() {
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">Application settings</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
             Credentials are entered here after startup. Site-specific behavior should stay in
-            config or database records rather than hard-coded logic.
+            config or database records rather than hard-coded logic. Browser storage keeps an
+            encrypted backup of the current setup.
           </p>
         </header>
 
