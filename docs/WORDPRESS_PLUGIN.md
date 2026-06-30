@@ -23,6 +23,9 @@ The next phase will build on these endpoints for discovery, publishing, and dupl
 7. Paste that token into the `Plugin token` field and save it.
 8. If you are not using the custom plugin yet, you can leave the token empty.
 
+You can also open the plugin row in the WordPress `Plugins` screen and click `Settings` to jump
+directly to the token page.
+
 ## What the plugin token is for
 
 The plugin token is a shared secret used to authorize calls from the local app to the WordPress plugin's custom REST endpoints. The plugin checks it against the `X-Publisher-Token` header before returning discovery data or accepting publishing requests.
