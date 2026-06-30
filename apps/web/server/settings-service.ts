@@ -12,6 +12,30 @@ const OPENAI_API_KEY = 'ai.openai_api_key';
 const OPENAI_TEXT_MODEL_KEY = 'ai.openai_text_model';
 const OPENAI_IMAGE_MODEL_KEY = 'ai.openai_image_model';
 
+function splitSiteUrl(siteUrl: string) {
+  try {
+    const parsed = new URL(siteUrl);
+    return {
+      siteProtocol: parsed.protocol.replace(':', '') === 'http' ? 'http' : 'https',
+      siteHostname: parsed.hostname
+    } as const;
+  } catch {
+    return {
+      siteProtocol: 'https' as const,
+      siteHostname: ''
+    };
+  }
+}
+
+function buildSiteUrl(protocol?: string, hostname?: string, fallbackUrl?: string) {
+  if (hostname?.trim()) {
+    const normalizedProtocol = protocol === 'http' ? 'http' : 'https';
+    return `${normalizedProtocol}://${hostname.trim()}`;
+  }
+
+  return fallbackUrl ?? 'https://localhost:3000';
+}
+
 export class SettingsService {
   private readonly prisma: SettingsPrisma;
   private readonly configService: ConfigService;
@@ -29,6 +53,9 @@ export class SettingsService {
         siteKey,
         name: siteConfig.siteName,
         siteUrl: siteConfig.siteUrl,
+        siteProtocol: splitSiteUrl(siteConfig.siteUrl).siteProtocol,
+        siteHostname: splitSiteUrl(siteConfig.siteUrl).siteHostname,
+        timezone: null,
         defaultStatus: siteConfig.wordpress.defaultStatus
       },
       update: {
@@ -48,7 +75,12 @@ export class SettingsService {
       openAiTextModel: openAiTextModel || process.env.OPENAI_TEXT_MODEL || '',
       openAiImageModel: openAiImageModel || process.env.OPENAI_IMAGE_MODEL || '',
       defaultSiteKey: siteKey,
+      wordpressSiteConfigured: Boolean(site.siteHostname),
       wordpressSiteUrl: site.siteUrl,
+      wordpressSiteProtocol:
+        (site.siteProtocol || splitSiteUrl(site.siteUrl).siteProtocol) as 'http' | 'https',
+      wordpressSiteHostname: site.siteHostname || splitSiteUrl(site.siteUrl).siteHostname,
+      wordpressTimezone: site.timezone || '',
       wordpressUsername: site.username ?? '',
       wordpressPasswordConfigured: hasStoredSecret(site.encryptedApplicationPassword),
       pluginTokenConfigured: hasStoredSecret(site.encryptedPluginToken)
@@ -59,7 +91,11 @@ export class SettingsService {
       completion: buildSettingsCompletionStatus({
         appUrl: values.appUrl,
         openAiKey: values.openAiKeyConfigured ? 'configured' : '',
+        wordpressSiteConfigured: values.wordpressSiteConfigured,
         wordpressSiteUrl: values.wordpressSiteUrl,
+        wordpressSiteProtocol: values.wordpressSiteProtocol,
+        wordpressSiteHostname: values.wordpressSiteHostname,
+        wordpressTimezone: values.wordpressTimezone,
         wordpressUsername: values.wordpressUsername,
         wordpressPassword: values.wordpressPasswordConfigured ? 'configured' : '',
         pluginToken: values.pluginTokenConfigured ? 'configured' : ''
@@ -70,6 +106,9 @@ export class SettingsService {
   async updateSettings(input: SettingsUpdate, siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site') {
     const parsed = settingsUpdateSchema.parse(input);
     const siteConfig = await this.configService.loadSiteConfig(siteKey);
+    const fallbackSiteUrl = parsed.wordpressSiteUrl?.trim() || siteConfig.siteUrl;
+    const siteUrl = buildSiteUrl(parsed.wordpressSiteProtocol, parsed.wordpressSiteHostname, fallbackSiteUrl);
+    const siteParts = splitSiteUrl(siteUrl);
 
     await this.setSetting(AI_PROVIDER_KEY, parsed.aiProvider);
     await this.setSecretSetting(OPENAI_API_KEY, parsed.openAiApiKey);
@@ -79,13 +118,19 @@ export class SettingsService {
     const siteUpdate: {
       name: string;
       siteUrl: string;
+      siteProtocol: 'http' | 'https';
+      siteHostname: string;
+      timezone: string | null;
       defaultStatus: 'draft' | 'publish' | 'future' | 'pending' | 'private';
       username?: string;
       encryptedApplicationPassword?: string;
       encryptedPluginToken?: string;
     } = {
       name: siteConfig.siteName,
-      siteUrl: parsed.wordpressSiteUrl?.trim() || siteConfig.siteUrl,
+      siteUrl,
+      siteProtocol: siteParts.siteProtocol,
+      siteHostname: parsed.wordpressSiteHostname?.trim() || siteParts.siteHostname,
+      timezone: parsed.wordpressTimezone?.trim() || null,
       defaultStatus: siteConfig.wordpress.defaultStatus
     };
 

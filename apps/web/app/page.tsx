@@ -78,7 +78,7 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>Next action</CardTitle>
-              <CardDescription>Run the setup script and add your WordPress site URL.</CardDescription>
+              <CardDescription>Run the setup script, then complete site setup in the UI.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-slate-700">
               <p>

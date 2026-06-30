@@ -345,15 +345,14 @@ export class PackageService {
     const config = await this.loadSiteConfig(siteKey);
     const created = await this.prisma.wordPressSite.upsert({
       where: { siteKey },
+      update: {},
       create: {
         siteKey,
         name: config.siteName,
         siteUrl: config.siteUrl,
-        defaultStatus: config.wordpress.defaultStatus
-      },
-      update: {
-        name: config.siteName,
-        siteUrl: config.siteUrl,
+        siteProtocol: 'https',
+        siteHostname: new URL(config.siteUrl).hostname,
+        timezone: null,
         defaultStatus: config.wordpress.defaultStatus
       }
     });
@@ -419,7 +418,12 @@ export class PackageService {
 
   private async loadSiteConfigBySiteId(siteId: string) {
     const site = await this.resolveSiteById(siteId);
-    return this.loadSiteConfig(site.siteKey);
+    const config = await this.loadSiteConfig(site.siteKey);
+    return {
+      ...config,
+      siteName: site.name || config.siteName,
+      siteUrl: site.siteUrl || config.siteUrl
+    };
   }
 
   private async loadContentProfile(profileKey?: string) {

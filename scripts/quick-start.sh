@@ -86,46 +86,19 @@ ensure_value_exists DEFAULT_CONTENT_PROFILE_KEY "linkedin-blog-package"
 
 cp .env apps/web/.env
 
-read -r -p "Enter your WordPress site URL: " site_url
-if ! node -e "try { const url = new URL(process.argv[1]); if (!/^https?:$/.test(url.protocol)) throw new Error(); } catch { process.exit(1); }" "$site_url"; then
-  echo "Invalid URL."
-  exit 1
-fi
-
 mkdir -p config/sites config/content-profiles
 
 if [[ ! -d node_modules ]]; then
   run_pm "$pm" install
 fi
 
-site_config_action="create"
-if [[ -f config/sites/default-site.json ]]; then
-  existing_site_url="$(node -e "try { const config = require('./config/sites/default-site.json'); console.log(config.siteUrl || ''); } catch { process.exit(1); }" || true)"
-  normalized_site_url="$(node -e "console.log(new URL(process.argv[1]).origin)" "$site_url")"
-
-  if [[ "$existing_site_url" == "$normalized_site_url" ]]; then
-    site_config_action="keep"
-  else
-    echo "config/sites/default-site.json already exists with siteUrl=${existing_site_url:-unknown}"
-    read -r -p "Overwrite it with ${normalized_site_url}? [y/N]: " overwrite_site_config
-    case "$overwrite_site_config" in
-      y|Y|yes|YES)
-        site_config_action="overwrite"
-        ;;
-      *)
-        echo "Keeping existing site config and continuing setup."
-        site_config_action="keep"
-        ;;
-    esac
-  fi
-fi
-
-node - "$site_url" "$site_config_action" <<'NODE'
+node <<'NODE'
 const fs = require('node:fs');
 const path = require('node:path');
 
-const siteUrl = new URL(process.argv[2]).origin;
-const siteConfigAction = process.argv[3];
+const siteConfigPath = path.resolve('config/sites/default-site.json');
+const profilePath = path.resolve('config/content-profiles/linkedin-blog-package.json');
+const siteUrl = 'https://example.com';
 const hostname = new URL(siteUrl).hostname;
 const siteName =
   hostname
@@ -133,8 +106,6 @@ const siteName =
     .split('.')[0]
     .replace(/[-_]+/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase()) || 'Default Site';
-const siteConfigPath = path.resolve('config/sites/default-site.json');
-const profilePath = path.resolve('config/content-profiles/linkedin-blog-package.json');
 
 const siteConfig = {
   siteKey: 'default-site',
@@ -313,11 +284,7 @@ const contentProfile = {
   }
 };
 
-if (fs.existsSync(siteConfigPath)) {
-  if (siteConfigAction === 'overwrite') {
-    fs.writeFileSync(siteConfigPath, `${JSON.stringify(siteConfig, null, 2)}\n`);
-  }
-} else {
+if (!fs.existsSync(siteConfigPath)) {
   fs.writeFileSync(siteConfigPath, `${JSON.stringify(siteConfig, null, 2)}\n`);
 }
 
@@ -343,9 +310,10 @@ echo "1. Go to Settings -> AI Provider"
 echo "   Add your OpenAI API key."
 echo
 echo "2. Go to Settings -> WordPress Site"
-echo "   Review the site URL."
+echo "   Set the protocol, hostname, and timezone."
 echo "   Add your WordPress username."
 echo "   Add your WordPress Application Password."
+echo "   Download the JSON backup after configuring."
 echo
 echo "3. Go to Settings -> WordPress Plugin"
 echo "   Copy the generated plugin token."

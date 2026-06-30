@@ -44,17 +44,23 @@ export class DiscoveryService {
   async getDefaultSiteRecord() {
     const siteConfig = await this.configService.loadSiteConfig(process.env.DEFAULT_SITE_KEY ?? 'default-site');
 
+    const existing = await this.deps.prisma.wordPressSite.findUnique({
+      where: { siteKey: siteConfig.siteKey }
+    });
+    if (existing) {
+      return existing;
+    }
+
     return this.deps.prisma.wordPressSite.upsert({
       where: { siteKey: siteConfig.siteKey },
-      update: {
-        name: siteConfig.siteName,
-        siteUrl: siteConfig.siteUrl,
-        defaultStatus: siteConfig.wordpress.defaultStatus
-      },
+      update: {},
       create: {
         siteKey: siteConfig.siteKey,
         name: siteConfig.siteName,
         siteUrl: siteConfig.siteUrl,
+        siteProtocol: 'https',
+        siteHostname: new URL(siteConfig.siteUrl).hostname,
+        timezone: null,
         defaultStatus: siteConfig.wordpress.defaultStatus
       }
     });
@@ -167,18 +173,23 @@ export class DiscoveryService {
 
   private async getSite(siteKey: string, siteConfig?: Awaited<ReturnType<ConfigService['loadSiteConfig']>>) {
     const config = siteConfig ?? (await this.configService.loadSiteConfig(siteKey));
+    const existing = await this.deps.prisma.wordPressSite.findUnique({
+      where: { siteKey }
+    });
+    if (existing) {
+      return existing;
+    }
 
     return this.deps.prisma.wordPressSite.upsert({
       where: { siteKey },
-      update: {
-        name: config.siteName,
-        siteUrl: config.siteUrl,
-        defaultStatus: config.wordpress.defaultStatus
-      },
+      update: {},
       create: {
         siteKey,
         name: config.siteName,
         siteUrl: config.siteUrl,
+        siteProtocol: 'https',
+        siteHostname: new URL(config.siteUrl).hostname,
+        timezone: null,
         defaultStatus: config.wordpress.defaultStatus
       }
     });

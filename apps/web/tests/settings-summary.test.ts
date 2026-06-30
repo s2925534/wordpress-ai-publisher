@@ -13,6 +13,7 @@ describe('buildSettingsCompletionStatus', () => {
     const status = buildSettingsCompletionStatus({
       appUrl: 'http://localhost:3000',
       openAiKey: 'key',
+      wordpressSiteConfigured: true,
       wordpressSiteUrl: 'https://example.com',
       wordpressUsername: 'user',
       wordpressPassword: 'pass',

@@ -5,7 +5,10 @@ export const settingsUpdateSchema = z.object({
   openAiApiKey: z.string().optional(),
   openAiTextModel: z.string().optional(),
   openAiImageModel: z.string().optional(),
+  wordpressSiteProtocol: z.enum(['http', 'https']).optional(),
+  wordpressSiteHostname: z.string().optional(),
   wordpressSiteUrl: z.string().url().optional(),
+  wordpressTimezone: z.string().optional(),
   wordpressUsername: z.string().optional(),
   wordpressApplicationPassword: z.string().optional(),
   wordpressPluginToken: z.string().optional()

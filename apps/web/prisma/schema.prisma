@@ -68,6 +68,9 @@ model WordPressSite {
   siteKey                    String                  @unique
   name                       String
   siteUrl                    String
+  siteProtocol               String                  @default("https")
+  siteHostname               String?
+  timezone                   String?
   username                   String?
   encryptedApplicationPassword String?
   encryptedPluginToken       String?
