@@ -32,10 +32,18 @@ type Props = {
   initialSnapshot: Snapshot | null;
 };
 
+type DiscoveryResponse = {
+  snapshot: Snapshot;
+  refreshed: boolean;
+  source: 'plugin' | 'fallback';
+  errorMessage?: string;
+};
+
 export function DiscoveryClient({ siteKey, initialSnapshot }: Props) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(initialSnapshot);
   const [message, setMessage] = useState('Ready to refresh discovery.');
   const [isPending, startTransition] = useTransition();
+  const [source, setSource] = useState<'plugin' | 'fallback' | 'unknown'>('unknown');
 
   const categoriesCount = snapshot?.categories.length ?? 0;
   const tagsCount = snapshot?.tags.length ?? 0;
@@ -61,13 +69,23 @@ export function DiscoveryClient({ siteKey, initialSnapshot }: Props) {
                   method: 'POST'
                 });
                 const payload = (await response.json()) as {
-                  data?: { snapshot: Snapshot };
+                  data?: DiscoveryResponse;
                   success: boolean;
                 };
 
                 if (payload.success && payload.data?.snapshot) {
                   setSnapshot(payload.data.snapshot);
-                  setMessage('Discovery refreshed.');
+                  setSource(payload.data.source ?? 'unknown');
+
+                  if (payload.data.source === 'plugin' && payload.data.refreshed) {
+                    setMessage('Discovery refreshed from the plugin.');
+                  } else {
+                    setMessage(
+                      payload.data.errorMessage
+                        ? `Discovery used fallback data: ${payload.data.errorMessage}`
+                        : 'Discovery used fallback data.'
+                    );
+                  }
                 } else {
                   setMessage('Discovery refresh failed.');
                 }
@@ -81,6 +99,9 @@ export function DiscoveryClient({ siteKey, initialSnapshot }: Props) {
 
         <h2 className="mt-4 text-2xl font-semibold tracking-tight">{summary}</h2>
         <p className="mt-2 text-sm text-slate-600">{message}</p>
+        <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
+          Source: {source === 'unknown' ? 'Not refreshed yet' : source}
+        </p>
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2">
           <Stat label="Site URL" value={snapshot?.siteUrl ?? 'Not discovered yet'} />

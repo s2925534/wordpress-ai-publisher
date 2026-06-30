@@ -19,7 +19,8 @@ export default async function SiteDiscoveryPage() {
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
             This page caches the selected WordPress site structure so the app can reuse live
             categories, tags, authors, and Jetpack status without assuming a generic WordPress
-            setup.
+            setup. The app token and the plugin token must match; if discovery falls back, the
+            page now shows the reason.
           </p>
         </header>
 
@@ -32,6 +33,8 @@ export default async function SiteDiscoveryPage() {
           </CardHeader>
           <CardContent className="text-sm text-slate-700">
             Last discovery data is cached locally and can be refreshed from the selected plugin.
+            If the plugin is installed, confirm the same token exists in app Settings and in
+            WordPress `Settings -&gt; Publisher Plugin`.
           </CardContent>
         </Card>
 
