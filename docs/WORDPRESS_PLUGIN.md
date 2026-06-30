@@ -14,9 +14,12 @@ The next phase will build on these endpoints for discovery, publishing, and dupl
 
 ## Install
 
-1. Copy `wordpress-plugin/publisher-plugin` into `wp-content/plugins/`.
-2. Activate the plugin in WordPress.
-3. Copy the plugin token from the app settings screen into the plugin settings in WordPress.
+1. Open the app and go to `Settings`.
+2. Download the plugin zip from the `WordPress Plugin` card.
+3. In WordPress, go to `Plugins -> Add New -> Upload Plugin` and upload the zip.
+4. Activate the plugin in WordPress.
+5. Copy the plugin token from the app settings screen into the plugin settings in WordPress.
+6. If you are not using the custom plugin yet, you can leave the token empty.
 
 ## What the plugin token is for
 
@@ -24,7 +27,8 @@ The plugin token is a shared secret used to authorize calls from the local app t
 
 ## Pack the plugin
 
-Run:
+The app can download the plugin zip directly from the settings screen. If you prefer a manual
+build, run:
 
 ```bash
 ./scripts/package-wordpress-plugin.sh

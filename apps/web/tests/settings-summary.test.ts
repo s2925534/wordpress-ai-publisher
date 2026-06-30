@@ -16,8 +16,7 @@ describe('buildSettingsCompletionStatus', () => {
       wordpressSiteConfigured: true,
       wordpressSiteUrl: 'https://example.com',
       wordpressUsername: 'user',
-      wordpressPassword: 'pass',
-      pluginToken: 'token'
+      wordpressPassword: 'pass'
     });
     expect(status.configured).toBe(true);
     expect(status.missing).toHaveLength(0);

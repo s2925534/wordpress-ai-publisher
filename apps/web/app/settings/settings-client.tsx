@@ -177,7 +177,7 @@ export function SettingsClient({ initialSettings }: Props) {
         <CardContent className="space-y-3 text-sm text-slate-700">
           <StatusRow label="OpenAI API key" configured={settings.openAiKeyConfigured} />
           <StatusRow label="WordPress password" configured={settings.wordpressPasswordConfigured} />
-          <StatusRow label="Plugin token" configured={settings.pluginTokenConfigured} />
+          <StatusRow label="Plugin token (optional)" configured={settings.pluginTokenConfigured} />
           <StatusRow
             label="Site URL"
             configured={settings.wordpressSiteConfigured}
@@ -196,11 +196,11 @@ export function SettingsClient({ initialSettings }: Props) {
       </Card>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Browser config backup</CardTitle>
-            <CardDescription>Download or restore the local configuration JSON.</CardDescription>
-          </CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle>Browser config backup</CardTitle>
+              <CardDescription>Download or restore the local configuration JSON.</CardDescription>
+            </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             <Button variant="secondary" onClick={downloadBrowserConfig}>
               Download JSON
@@ -218,6 +218,33 @@ export function SettingsClient({ initialSettings }: Props) {
                 event.target.value = '';
               }}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>WordPress Plugin</CardTitle>
+            <CardDescription>
+              Download the plugin zip from the app, install it inside WordPress, and only then
+              copy the optional token if you want plugin-backed discovery.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <a
+              href="/api/plugin/package"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            >
+              Download plugin zip
+            </a>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <p className="font-medium text-slate-900">Install checklist</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>Download the zip from this app.</li>
+                <li>Upload it in WordPress under Plugins.</li>
+                <li>Activate the plugin.</li>
+                <li>Only then copy the plugin token if you want plugin-backed discovery.</li>
+              </ol>
+            </div>
           </CardContent>
         </Card>
 
@@ -307,6 +334,10 @@ export function SettingsClient({ initialSettings }: Props) {
               onChange={(value) => setForm((current) => ({ ...current, wordpressPluginToken: value }))}
               placeholder={settings.pluginTokenConfigured ? 'Configured' : ''}
             />
+            <p className="text-xs text-slate-500 sm:col-span-2">
+              Optional until you install the custom WordPress plugin. The plugin token authorizes
+              app-to-plugin requests for discovery and publishing.
+            </p>
           </CardContent>
         </Card>
 

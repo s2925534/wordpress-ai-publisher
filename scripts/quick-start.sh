@@ -316,9 +316,9 @@ echo "   Add your WordPress Application Password."
 echo "   Download the JSON backup after configuring."
 echo
 echo "3. Go to Settings -> WordPress Plugin"
-echo "   Copy the generated plugin token."
-echo "   Install the WordPress plugin zip from dist/ if available."
-echo "   Paste the plugin token into the plugin settings in WordPress."
+echo "   Download the plugin zip from the app."
+echo "   Install the plugin in WordPress."
+echo "   Paste the plugin token only if you want plugin-backed discovery."
 echo
 echo "4. Go to Settings -> Content Profile"
 echo "   Review preferred tags, hashtags, tone, image style, and SEO rules."

@@ -40,6 +40,8 @@ Phase 11 adds logging, validation, and workflow hardening around the publishing 
 - The settings screen is the primary setup surface for the site URL, protocol, timezone, AI provider, AI models, OpenAI API key, and WordPress credentials.
 - The browser keeps an encrypted JSON backup of the current setup so the user can export and import configuration.
 - Site-specific behavior still has JSON defaults under `config/`, but the UI-backed setup is the editable source of truth.
+- The WordPress plugin token is optional until you install the custom plugin.
+- The settings screen also offers a direct download of the WordPress plugin zip.
 
 ## Quick start
 

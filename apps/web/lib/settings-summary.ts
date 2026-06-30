@@ -22,7 +22,6 @@ export function buildSettingsCompletionStatus(values: {
   if (!values.wordpressSiteConfigured) missing.push('WordPress site');
   if (!values.wordpressUsername) missing.push('WordPress username');
   if (!values.wordpressPassword) missing.push('WordPress application password');
-  if (!values.pluginToken) missing.push('WordPress plugin token');
 
   return {
     configured: missing.length === 0,
