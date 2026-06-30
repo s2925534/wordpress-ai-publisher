@@ -94,35 +94,237 @@ fi
 
 mkdir -p config/sites config/content-profiles
 
-node --loader tsx --input-type=module - "$site_url" <<'NODE'
-import fs from 'node:fs';
-import path from 'node:path';
-import { createDefaultContentProfile, createDefaultSiteConfig } from './apps/web/server/default-config.ts';
+if [[ ! -d node_modules ]]; then
+  run_pm "$pm" install
+fi
 
-const siteUrl = process.argv[2];
+site_config_action="create"
+if [[ -f config/sites/default-site.json ]]; then
+  existing_site_url="$(node -e "try { const config = require('./config/sites/default-site.json'); console.log(config.siteUrl || ''); } catch { process.exit(1); }" || true)"
+  normalized_site_url="$(node -e "console.log(new URL(process.argv[1]).origin)" "$site_url")"
+
+  if [[ "$existing_site_url" == "$normalized_site_url" ]]; then
+    site_config_action="keep"
+  else
+    echo "config/sites/default-site.json already exists with siteUrl=${existing_site_url:-unknown}"
+    read -r -p "Overwrite it with ${normalized_site_url}? [y/N]: " overwrite_site_config
+    case "$overwrite_site_config" in
+      y|Y|yes|YES)
+        site_config_action="overwrite"
+        ;;
+      *)
+        echo "Keeping existing site config and continuing setup."
+        site_config_action="keep"
+        ;;
+    esac
+  fi
+fi
+
+node - "$site_url" "$site_config_action" <<'NODE'
+const fs = require('node:fs');
+const path = require('node:path');
+
+const siteUrl = new URL(process.argv[2]).origin;
+const siteConfigAction = process.argv[3];
+const hostname = new URL(siteUrl).hostname;
+const siteName =
+  hostname
+    .replace(/^www\./i, '')
+    .split('.')[0]
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase()) || 'Default Site';
 const siteConfigPath = path.resolve('config/sites/default-site.json');
 const profilePath = path.resolve('config/content-profiles/linkedin-blog-package.json');
 
-const siteConfig = createDefaultSiteConfig(siteUrl);
+const siteConfig = {
+  siteKey: 'default-site',
+  siteName,
+  siteUrl,
+  wordpress: {
+    defaultStatus: 'draft',
+    allowPublish: false,
+    allowSchedule: true,
+    allowCategoryCreation: true,
+    allowTagCreation: true,
+    preferExistingCategories: true,
+    preferExistingTags: true
+  },
+  plugin: {
+    routeNamespace: 'publisher/v1',
+    requiresToken: true
+  },
+  brand: {
+    displayName: siteName,
+    positioning: 'A professional WordPress publishing site.',
+    audiences: ['professionals', 'technical readers', 'business readers'],
+    preferredTone: ['professional', 'clear', 'credible', 'practical'],
+    avoidTone: ['hype', 'clickbait', 'robotic wording', 'generic corporate jargon']
+  },
+  contentPackage: {
+    outputOrder: [
+      'Title',
+      'LinkedIn Post',
+      'Excerpt',
+      'Plain CSV Tags',
+      'Recommended Categories',
+      'Feature Image',
+      'Alt Text',
+      'Suggested Image File Name'
+    ],
+    maxCharacters: 8000,
+    linkedinPostMustEndWithHashtags: true
+  },
+  hashtags: {
+    alwaysInclude: [],
+    preferred: [
+      '#SoftwareEngineering',
+      '#SoftwareArchitecture',
+      '#ArtificialIntelligence',
+      '#PlatformEngineering',
+      '#CloudInfrastructure',
+      '#DistributedSystems',
+      '#Interoperability',
+      '#DevSecOps',
+      '#WorkflowAutomation',
+      '#EngineeringLeadership',
+      '#CyberSecurity',
+      '#TechnologyStrategy',
+      '#DeveloperTools'
+    ],
+    maxHashtags: 12
+  },
+  tags: {
+    alwaysConsider: [],
+    preferred: [
+      'software engineering',
+      'software architecture',
+      'interoperability',
+      'distributed systems',
+      'platform engineering',
+      'cloud infrastructure',
+      'workflow automation',
+      'developer tools',
+      'engineering leadership',
+      'technology strategy'
+    ],
+    minTags: 5,
+    maxTags: 12
+  },
+  categories: {
+    mode: 'discover_live_first',
+    fallbackCategories: [],
+    avoidUnlessExplicit: ['Uncategorized'],
+    allowSuggestedNewCategory: true,
+    requireConfirmationBeforeCreate: true
+  },
+  seo: {
+    generateSeoTitle: true,
+    generateMetaDescription: true,
+    generatePrimaryKeyword: true,
+    generateSecondaryKeywords: true,
+    generateSlug: true,
+    titleTargetLength: {
+      min: 45,
+      max: 65
+    },
+    metaDescriptionTargetLength: {
+      min: 140,
+      max: 160
+    },
+    avoidKeywordStuffing: true,
+    suggestInternalLinks: true
+  },
+  image: {
+    generateFeatureImage: true,
+    requireAltText: true,
+    allowNoImage: true,
+    style: ['professional', 'modern', 'technology-oriented', 'meaningful', 'visually strong'],
+    avoid: [
+      'generic stock-photo style',
+      'excessive blue unless requested',
+      'overcrowded diagrams',
+      'text-heavy graphics unless requested'
+    ],
+    filenameFormat: 'lowercase-hyphenated'
+  },
+  urlRules: {
+    allowSiteUrlMentions: [],
+    doNotMentionAsUrl: []
+  },
+  jetpack: {
+    enabled: true,
+    socialSharingOptional: true,
+    continueIfUnavailable: true
+  }
+};
+
+const contentProfile = {
+  profileKey: 'linkedin-blog-package',
+  name: 'LinkedIn + WordPress Blog Package',
+  description: 'Generates a LinkedIn-ready post and WordPress-ready publication package.',
+  outputOrder: [
+    'Title',
+    'LinkedIn Post',
+    'Excerpt',
+    'Plain CSV Tags',
+    'Recommended Categories',
+    'Feature Image',
+    'Alt Text',
+    'Suggested Image File Name'
+  ],
+  writingStyle: {
+    prefer: ['technically mature', 'practical', 'credible', 'specific', 'professionally structured'],
+    avoid: ['robotic AI wording', 'shallow motivation', 'excessive hype', 'generic corporate jargon', 'clickbait']
+  },
+  sections: {
+    title: {
+      required: true,
+      seoFriendly: true
+    },
+    linkedinPost: {
+      required: true,
+      shortParagraphs: true,
+      mustEndWithHashtags: true
+    },
+    excerpt: {
+      required: true,
+      maxParagraphs: 3
+    },
+    plainCsvTags: {
+      required: true,
+      noHashtags: true
+    },
+    recommendedCategories: {
+      required: true,
+      useSiteCategories: true
+    },
+    featureImage: {
+      required: false,
+      generatePrompt: true,
+      generateImage: true
+    },
+    altText: {
+      requiredWhenImageExists: true
+    },
+    suggestedImageFileName: {
+      requiredWhenImageExists: true,
+      format: 'lowercase-hyphenated'
+    }
+  }
+};
+
 if (fs.existsSync(siteConfigPath)) {
-  const existing = JSON.parse(fs.readFileSync(siteConfigPath, 'utf8'));
-  if (existing.siteUrl !== siteConfig.siteUrl) {
-    console.error(`config/sites/default-site.json already exists with siteUrl=${existing.siteUrl}`);
-    console.error('Refusing to overwrite the site config.');
-    process.exit(1);
+  if (siteConfigAction === 'overwrite') {
+    fs.writeFileSync(siteConfigPath, `${JSON.stringify(siteConfig, null, 2)}\n`);
   }
 } else {
   fs.writeFileSync(siteConfigPath, `${JSON.stringify(siteConfig, null, 2)}\n`);
 }
 
 if (!fs.existsSync(profilePath)) {
-  fs.writeFileSync(profilePath, `${JSON.stringify(createDefaultContentProfile(), null, 2)}\n`);
+  fs.writeFileSync(profilePath, `${JSON.stringify(contentProfile, null, 2)}\n`);
 }
 NODE
-
-if [[ ! -d node_modules ]]; then
-  run_pm "$pm" install
-fi
 
 run_pm "$pm" run prisma:generate
 run_pm "$pm" run prisma:migrate
