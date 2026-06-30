@@ -2,11 +2,13 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { buildSettingsCompletionStatus } from '@/lib/settings-summary';
+import { SettingsService } from '@/server/settings-service';
 
-const status = buildSettingsCompletionStatus({});
+export default async function DashboardPage() {
+  const service = new SettingsService(process.env.CONFIG_DIR ?? './config');
+  const settings = await service.getSettings();
+  const status = settings.completion;
 
-export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">

@@ -1,33 +1,11 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { SettingsClient } from '@/app/settings/settings-client';
+import { SettingsService } from '@/server/settings-service';
 
-const sections = [
-  {
-    title: 'AI Provider',
-    description: 'Store your OpenAI key and model selection here after startup.'
-  },
-  {
-    title: 'WordPress Site',
-    description: 'Keep the site URL, username, and application password in app settings.'
-  },
-  {
-    title: 'WordPress Plugin',
-    description: 'Generate and manage the plugin token for REST endpoint authentication.'
-  },
-  {
-    title: 'Content Profile',
-    description: 'Adjust tags, hashtags, tone, SEO preferences, and image rules per site.'
-  },
-  {
-    title: 'Publishing Defaults',
-    description: 'Draft by default, publish only after explicit confirmation.'
-  }
-];
+export default async function SettingsPage() {
+  const service = new SettingsService(process.env.CONFIG_DIR ?? './config');
+  const settings = await service.getSettings();
 
-export default function SettingsPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
@@ -40,21 +18,7 @@ export default function SettingsPage() {
           </p>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          {sections.map((section) => (
-            <Card key={section.title}>
-              <CardHeader>
-                <CardTitle>{section.title}</CardTitle>
-                <CardDescription>{section.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input placeholder={`${section.title} value`} />
-                <Textarea placeholder={`Notes for ${section.title.toLowerCase()}`} />
-                <Button variant="secondary">Save {section.title}</Button>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
+        <SettingsClient initialSettings={settings} />
       </div>
     </main>
   );

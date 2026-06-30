@@ -14,7 +14,7 @@
     "prisma:generate": "npm --workspace apps/web run prisma:generate",
     "prisma:migrate": "npm --workspace apps/web run prisma:migrate",
     "prisma:seed": "npm --workspace apps/web run prisma:seed",
-    "config:validate": "node --import tsx scripts/validate-config.ts",
+    "config:validate": "tsx scripts/validate-config.ts",
     "quick-start": "bash scripts/quick-start.sh"
   },
   "devDependencies": {

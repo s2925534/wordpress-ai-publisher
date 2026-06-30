@@ -6,6 +6,7 @@ import {
 } from '@/lib/discovery-schemas';
 import { prisma as defaultPrisma } from '@/lib/prisma';
 import { ConfigService } from '@/server/config-service';
+import { decryptSecret } from '@/server/secret-utils';
 
 type DiscoveryPrismaLike = {
   wordPressSite: {
@@ -188,7 +189,7 @@ export class DiscoveryService {
       where: { id: siteId }
     });
 
-    return site?.encryptedPluginToken ?? '';
+    return decryptSecret(site?.encryptedPluginToken);
   }
 
   private normalizeSnapshot(data: PluginDiscoveryData, fallbackSiteUrl: string) {

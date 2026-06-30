@@ -202,4 +202,69 @@ describe('PackageService', () => {
     expect(prisma.__state.attempts).toHaveLength(1);
     expect(requests.some((request) => request.url.includes('/posts'))).toBe(true);
   });
+
+  it('keeps draft creation working when Jetpack status is unavailable', async () => {
+    const prisma = createMockPrisma();
+    const service = new PackageService(createConfigDir(), {
+      prisma: prisma as any,
+      fetchFn: async (input, init) => {
+        const url = input.toString();
+        if (url.includes('/posts') && init?.method === 'POST' && !url.includes('/publish')) {
+          return new Response(JSON.stringify({ success: true, data: { postId: 321, postUrl: 'https://example.com/?p=321', status: 'draft' } }), { status: 200 });
+        }
+        if (url.includes('/publish')) {
+          return new Response(JSON.stringify({ success: true, data: { postId: 321, postUrl: 'https://example.com/?p=321', status: 'publish' } }), { status: 200 });
+        }
+        throw new Error('Jetpack unavailable');
+      }
+    });
+
+    const generated = await service.generate({
+      inputText: 'A practical draft about resilience when social integrations are unavailable.',
+      sourceSafetyType: 'notes_only',
+      siteKey: 'default-site',
+      contentProfileKey: 'linkedin-blog-package'
+    });
+
+    const attempt = await service.publish({
+      packageId: generated.packageId ?? '',
+      action: 'draft',
+      confirmNewCategory: false,
+      confirmPublish: true,
+      confirmImageApproval: true,
+      idempotencyKey: 'idempotency-key-2',
+      selectedCategoryIds: [],
+      selectedTagNames: []
+    });
+
+    expect(attempt.wordpressStatus).toBe('draft');
+    expect(attempt.socialStatus).toBe('unavailable');
+    expect(prisma.__state.attempts).toHaveLength(1);
+  });
+
+  it('rejects image assignment when alt text is missing', async () => {
+    const prisma = createMockPrisma();
+    const service = new PackageService(createConfigDir(), { prisma: prisma as any });
+
+    const generated = await service.generate({
+      inputText: 'A practical draft about image accessibility and review controls.',
+      sourceSafetyType: 'notes_only',
+      siteKey: 'default-site',
+      contentProfileKey: 'linkedin-blog-package'
+    });
+
+    await expect(
+      service.publish({
+        packageId: generated.packageId ?? '',
+        action: 'draft',
+        confirmNewCategory: false,
+        confirmPublish: true,
+        confirmImageApproval: true,
+        idempotencyKey: 'idempotency-key-3',
+        selectedCategoryIds: [],
+        selectedTagNames: [],
+        featuredMediaAltText: '   '
+      })
+    ).rejects.toThrow('Alt text is required before assigning a featured image.');
+  });
 });

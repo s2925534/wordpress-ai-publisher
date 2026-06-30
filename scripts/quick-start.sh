@@ -94,7 +94,7 @@ fi
 
 mkdir -p config/sites config/content-profiles
 
-node --import tsx --input-type=module - "$site_url" <<'NODE'
+node --loader tsx --input-type=module - "$site_url" <<'NODE'
 import fs from 'node:fs';
 import path from 'node:path';
 import { createDefaultContentProfile, createDefaultSiteConfig } from './apps/web/server/default-config.ts';

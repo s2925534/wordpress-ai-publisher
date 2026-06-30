@@ -1,4 +1,6 @@
 import type { SiteConfig } from '@/lib/config-schemas';
+import { redactSecrets } from '@/lib/error-utils';
+import { decryptSecret } from '@/server/secret-utils';
 
 type WordPressSiteRecord = {
   id: string;
@@ -130,7 +132,7 @@ export class WordPressService {
   }
 
   private authHeaders(siteRecord?: WordPressSiteRecord) {
-    const token = siteRecord?.encryptedPluginToken ?? '';
+    const token = decryptSecret(siteRecord?.encryptedPluginToken);
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
@@ -145,7 +147,10 @@ export class WordPressService {
   private async parseResponse(response: Response) {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = (payload as { error?: { message?: string } })?.error?.message ?? `WordPress request failed with status ${response.status}`;
+      const message = redactSecrets(
+        (payload as { error?: { message?: string } })?.error?.message ??
+          `WordPress request failed with status ${response.status}`
+      );
       throw new Error(message);
     }
 

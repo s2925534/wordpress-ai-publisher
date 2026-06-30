@@ -237,13 +237,17 @@ function EditableField({
   onChange: (value: string) => void;
   textarea?: boolean;
 }) {
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+        {label}
+      </label>
       {textarea ? (
-        <Textarea value={value} onChange={(event) => onChange(event.target.value)} />
+        <Textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} />
       ) : (
-        <Input value={value} onChange={(event) => onChange(event.target.value)} />
+        <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} />
       )}
     </div>
   );
@@ -260,10 +264,14 @@ function Field({
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+        {label}
+      </label>
+      <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </div>
   );
 }
