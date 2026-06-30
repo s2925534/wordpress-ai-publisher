@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SettingsService } from '@/server/settings-service';
@@ -19,32 +17,6 @@ export default async function DashboardPage() {
             Phase 2 adds the persistence and settings surface needed before WordPress discovery and
             publishing logic land.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/settings"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-            >
-              Open settings
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-200"
-            >
-              Home
-            </Link>
-            <Link
-              href="/site-discovery"
-              className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-500"
-            >
-              Site discovery
-            </Link>
-            <Link
-              href="/new-package"
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
-            >
-              New package
-            </Link>
-          </div>
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">

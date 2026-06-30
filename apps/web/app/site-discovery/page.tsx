@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DiscoveryClient } from '@/app/site-discovery/discovery-client';
@@ -23,20 +21,6 @@ export default async function SiteDiscoveryPage() {
             categories, tags, authors, and Jetpack status without assuming a generic WordPress
             setup.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/settings"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-200"
-            >
-              Settings
-            </Link>
-          </div>
         </header>
 
         <Card>

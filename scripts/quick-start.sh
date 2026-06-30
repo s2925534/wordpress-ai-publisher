@@ -318,7 +318,7 @@ echo
 echo "3. Go to Settings -> WordPress Plugin"
 echo "   Download the plugin zip from the app."
 echo "   Install the plugin in WordPress."
-echo "   Paste the plugin token only if you want plugin-backed discovery."
+echo "   Generate or copy the plugin token in Settings -> WordPress Site."
 echo
 echo "4. Go to Settings -> Content Profile"
 echo "   Review preferred tags, hashtags, tone, image style, and SEO rules."

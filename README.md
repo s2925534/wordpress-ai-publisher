@@ -42,6 +42,7 @@ Phase 11 adds logging, validation, and workflow hardening around the publishing 
 - Site-specific behavior still has JSON defaults under `config/`, but the UI-backed setup is the editable source of truth.
 - The WordPress plugin token is optional until you install the custom plugin.
 - The settings screen also offers a direct download of the WordPress plugin zip.
+- The plugin token is generated and copied from the WordPress Site section in Settings.
 
 ## Quick start
 

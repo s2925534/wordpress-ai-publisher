@@ -30,6 +30,7 @@ type SettingsPayload = {
   wordpressUsername: string;
   wordpressPasswordConfigured: boolean;
   pluginTokenConfigured: boolean;
+  wordpressPluginToken: string;
   completion: {
     configured: boolean;
     missing: string[];
@@ -67,7 +68,7 @@ export function SettingsClient({ initialSettings }: Props) {
     wordpressSiteUrl: initialSettings.wordpressSiteUrl,
     wordpressUsername: initialSettings.wordpressUsername,
     wordpressApplicationPassword: '',
-    wordpressPluginToken: ''
+    wordpressPluginToken: initialSettings.wordpressPluginToken || ''
   });
   const [message, setMessage] = useState('Settings loaded.');
   const [isSaving, setIsSaving] = useState(false);
@@ -160,6 +161,24 @@ export function SettingsClient({ initialSettings }: Props) {
     setMessage('Imported browser configuration.');
   }
 
+  function generatePluginToken() {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const token = bytesToHex(bytes);
+    setForm((current) => ({ ...current, wordpressPluginToken: token }));
+    setMessage('Generated a new plugin token.');
+  }
+
+  async function copyPluginToken() {
+    if (!form.wordpressPluginToken) {
+      setMessage('Generate or paste a plugin token first.');
+      return;
+    }
+
+    await navigator.clipboard.writeText(form.wordpressPluginToken);
+    setMessage('Plugin token copied to clipboard.');
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
       <Card>
@@ -225,8 +244,9 @@ export function SettingsClient({ initialSettings }: Props) {
           <CardHeader>
             <CardTitle>WordPress Plugin</CardTitle>
             <CardDescription>
-              Download the plugin zip from the app, install it inside WordPress, and only then
-              copy the optional token if you want plugin-backed discovery.
+              Download the plugin zip from the app, install it inside WordPress, and use the
+              token controls in the WordPress Site section above when you want plugin-backed
+              discovery.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -242,7 +262,7 @@ export function SettingsClient({ initialSettings }: Props) {
                 <li>Download the zip from this app.</li>
                 <li>Upload it in WordPress under Plugins.</li>
                 <li>Activate the plugin.</li>
-                <li>Only then copy the plugin token if you want plugin-backed discovery.</li>
+                <li>Generate or copy the plugin token in the WordPress Site section above.</li>
               </ol>
             </div>
           </CardContent>
@@ -329,14 +349,21 @@ export function SettingsClient({ initialSettings }: Props) {
             />
             <Field
               label="Plugin token"
-              type="password"
               value={form.wordpressPluginToken}
               onChange={(value) => setForm((current) => ({ ...current, wordpressPluginToken: value }))}
-              placeholder={settings.pluginTokenConfigured ? 'Configured' : ''}
+              placeholder={settings.pluginTokenConfigured ? 'Configured' : 'Generate one here'}
             />
+            <div className="flex flex-wrap gap-3 sm:col-span-2">
+              <Button variant="secondary" onClick={generatePluginToken}>
+                Generate token
+              </Button>
+              <Button variant="secondary" onClick={copyPluginToken}>
+                Copy token
+              </Button>
+            </div>
             <p className="text-xs text-slate-500 sm:col-span-2">
-              Optional until you install the custom WordPress plugin. The plugin token authorizes
-              app-to-plugin requests for discovery and publishing.
+              Optional until you install the custom WordPress plugin. Generate one here, then copy
+              it into the plugin settings in WordPress.
             </p>
           </CardContent>
         </Card>
@@ -363,6 +390,10 @@ function buildTimezoneOptions() {
   const values = known.length ? known : fallback;
 
   return values.map((value) => ({ value, label: value }));
+}
+
+function bytesToHex(bytes: Uint8Array) {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 function StatusRow({ label, configured }: { label: string; configured: boolean }) {

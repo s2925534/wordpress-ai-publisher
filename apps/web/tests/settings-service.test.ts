@@ -51,5 +51,6 @@ describe('SettingsService', () => {
     expect(result.wordpressUsername).toBe('pedro');
     expect(result.wordpressPasswordConfigured).toBe(true);
     expect(result.pluginTokenConfigured).toBe(true);
+    expect(result.wordpressPluginToken).toBe('plugin-token');
   });
 });

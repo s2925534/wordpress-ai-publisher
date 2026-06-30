@@ -8,7 +8,7 @@ import {
 import { settingsUpdateSchema, type SettingsUpdate } from '@/lib/settings-schemas';
 import { buildSettingsCompletionStatus } from '@/lib/settings-summary';
 import { ConfigService } from '@/server/config-service';
-import { encryptSecret, hasStoredSecret } from '@/server/secret-utils';
+import { decryptSecret, encryptSecret, hasStoredSecret } from '@/server/secret-utils';
 
 type SettingsPrisma = Pick<PrismaClient, 'localSetting' | 'wordPressSite'>;
 
@@ -88,7 +88,8 @@ export class SettingsService {
       wordpressTimezone: site.timezone || '',
       wordpressUsername: site.username ?? '',
       wordpressPasswordConfigured: hasStoredSecret(site.encryptedApplicationPassword),
-      pluginTokenConfigured: hasStoredSecret(site.encryptedPluginToken)
+      pluginTokenConfigured: hasStoredSecret(site.encryptedPluginToken),
+      wordpressPluginToken: decryptSecret(site.encryptedPluginToken)
     };
 
     return {

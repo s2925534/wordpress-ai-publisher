@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PackageEditorClient } from '@/app/packages/[packageId]/package-editor-client';
@@ -24,20 +22,6 @@ export default async function PackagePage({
             Edit the generated package, prepare the featured image, and choose draft, publish, or
             schedule only after explicit confirmation.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/new-package"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-            >
-              New package
-            </Link>
-            <Link
-              href="/site-discovery"
-              className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-500"
-            >
-              Site discovery
-            </Link>
-          </div>
         </header>
 
         <Card>
