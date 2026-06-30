@@ -8,7 +8,7 @@ It includes:
 - site discovery helpers
 - categories, tags, authors, recent posts, media, post, and Jetpack service scaffolding
 - structured REST responses with explicit success and error envelopes
-- token-based request validation using the `publisher_plugin_token` option or `PUBLISHER_PLUGIN_TOKEN` constant
+- token-based request validation using the locally stored plugin token managed from the app settings screen
 
 The next phase will build on these endpoints for discovery, publishing, and duplicate-protection flows in the app.
 
@@ -16,7 +16,7 @@ The next phase will build on these endpoints for discovery, publishing, and dupl
 
 1. Copy `wordpress-plugin/publisher-plugin` into `wp-content/plugins/`.
 2. Activate the plugin in WordPress.
-3. Set the plugin token in WordPress if you are using the token option.
+3. Copy the plugin token from the app settings screen into the plugin settings in WordPress.
 
 ## Pack the plugin
 

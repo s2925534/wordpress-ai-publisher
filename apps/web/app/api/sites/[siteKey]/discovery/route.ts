@@ -9,10 +9,10 @@ function getService() {
 
 export async function GET(
   _request: Request,
-  context: any
+  context: { params: Promise<{ siteKey: string }> }
 ) {
   try {
-    const { siteKey } = context.params;
+    const { siteKey } = await context.params;
     const service = getService();
     const snapshot = await service.getLatestSnapshot(siteKey);
 
@@ -30,10 +30,10 @@ export async function GET(
 
 export async function POST(
   _request: Request,
-  context: any
+  context: { params: Promise<{ siteKey: string }> }
 ) {
   try {
-    const { siteKey } = context.params;
+    const { siteKey } = await context.params;
     const service = getService();
     const result = await service.refresh(siteKey);
 

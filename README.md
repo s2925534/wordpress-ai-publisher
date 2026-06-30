@@ -34,6 +34,12 @@ Phase 10 adds explicit publish and schedule actions through the final confirmati
 
 Phase 11 adds logging, validation, and workflow hardening around the publishing pipeline.
 
+## Configuration model
+
+- `.env` is for process-level values: app secrets, database URL, AI provider defaults, and runtime feature toggles.
+- WordPress site credentials live in the database through the settings screen.
+- Site-specific behavior lives in JSON config files under `config/`.
+
 ## Quick start
 
 Run:

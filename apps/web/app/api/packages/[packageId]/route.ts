@@ -8,9 +8,9 @@ function getService() {
   return new PackageService(process.env.CONFIG_DIR ?? './config');
 }
 
-export async function GET(_request: Request, context: any) {
+export async function GET(_request: Request, context: { params: Promise<{ packageId: string }> }) {
   try {
-    const { packageId } = context.params;
+    const { packageId } = await context.params;
     const service = getService();
     const record = await service.getPackage(packageId);
 
@@ -23,9 +23,9 @@ export async function GET(_request: Request, context: any) {
   }
 }
 
-export async function PATCH(request: Request, context: any) {
+export async function PATCH(request: Request, context: { params: Promise<{ packageId: string }> }) {
   try {
-    const { packageId } = context.params;
+    const { packageId } = await context.params;
     const payload = packageUpdateSchema.parse(await request.json());
     const service = getService();
     const updated = await service.updatePackage(packageId, payload);

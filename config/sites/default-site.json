@@ -1,7 +1,7 @@
 {
   "siteKey": "default-site",
-  "siteName": "Example WordPress Site",
-  "siteUrl": "https://example.com",
+  "siteName": "Veloso",
+  "siteUrl": "https://veloso.dev",
   "wordpress": {
     "defaultStatus": "draft",
     "allowPublish": false,
@@ -16,7 +16,7 @@
     "requiresToken": true
   },
   "brand": {
-    "displayName": "Default Site",
+    "displayName": "Veloso",
     "positioning": "A professional WordPress publishing site.",
     "audiences": [
       "professionals",

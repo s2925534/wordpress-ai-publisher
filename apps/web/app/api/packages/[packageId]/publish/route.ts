@@ -8,9 +8,9 @@ function getService() {
   return new PackageService(process.env.CONFIG_DIR ?? './config');
 }
 
-export async function POST(request: Request, context: any) {
+export async function POST(request: Request, context: { params: Promise<{ packageId: string }> }) {
   try {
-    const { packageId } = context.params;
+    const { packageId } = await context.params;
     const body = publishRequestSchema.parse({
       ...(await request.json()),
       packageId

@@ -1,5 +1,9 @@
 # Security
 
-Phase 1 keeps secrets out of source by using `.env` and by ignoring runtime artifacts.
+The app uses a split configuration model:
 
-Future phases will add encryption for stored credentials and server-side validation for every external request.
+- `.env` holds process-level values such as app secrets, database connection strings, and AI provider defaults.
+- The database holds site-specific credentials such as the WordPress username, application password, and plugin token.
+- JSON config files hold site-specific behavior such as the site URL, brand voice, and publishing preferences.
+
+Secrets are never returned to the browser. Stored credentials are encrypted before persistence, and server-side validation is applied before any external request is made.

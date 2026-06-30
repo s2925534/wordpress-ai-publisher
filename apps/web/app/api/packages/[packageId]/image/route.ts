@@ -7,9 +7,9 @@ function getService() {
   return new PackageService(process.env.CONFIG_DIR ?? './config');
 }
 
-export async function POST(_request: Request, context: any) {
+export async function POST(_request: Request, context: { params: Promise<{ packageId: string }> }) {
   try {
-    const { packageId } = context.params;
+    const { packageId } = await context.params;
     const service = getService();
     const result = await service.prepareImage(packageId);
 
