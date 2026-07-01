@@ -10,8 +10,6 @@ It includes:
 - structured REST responses with explicit success and error envelopes
 - token-based request validation using the locally stored plugin token managed from the app settings screen
 
-The next phase will build on these endpoints for discovery, publishing, and duplicate-protection flows in the app.
-
 ## Install
 
 1. Open the app and go to `Settings`.
@@ -19,8 +17,8 @@ The next phase will build on these endpoints for discovery, publishing, and dupl
 3. In WordPress, go to `Plugins -> Add New -> Upload Plugin` and upload the zip.
 4. Activate the plugin in WordPress.
 5. Generate or copy the plugin token from the `WordPress Site` section in the app settings screen.
-6. In WordPress admin, go to `Settings -> Publisher Plugin`.
-7. Paste that token into the `Plugin token` field and save it.
+6. Use `Open plugin settings with token` to open WordPress with the token prefilled, or manually go to `Settings -> Publisher Plugin`.
+7. Review the token in WordPress and click `Save Plugin Token`.
 8. If you are not using the custom plugin yet, you can leave the token empty.
 
 You can also open the plugin row in the WordPress `Plugins` screen and click `Settings` to jump
@@ -29,6 +27,10 @@ directly to the token page.
 ## What the plugin token is for
 
 The plugin token is a shared secret used to authorize calls from the local app to the WordPress plugin's custom REST endpoints. The plugin checks it against the `X-Publisher-Token` header before returning discovery data or accepting publishing requests.
+
+The app's prefilled settings link places the token in the URL fragment so WordPress receives only
+the settings page request. JavaScript on the plugin settings page reads the fragment, fills the
+token field, and waits for a WordPress admin to save.
 
 ## Pack the plugin
 

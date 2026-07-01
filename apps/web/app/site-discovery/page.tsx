@@ -9,6 +9,8 @@ export default async function SiteDiscoveryPage() {
   const service = new DiscoveryService(process.env.CONFIG_DIR ?? './config');
   const site = await service.getDefaultSiteRecord();
   const snapshot = await service.getLatestSnapshot(siteKey);
+  const selectedSiteUrl = snapshot?.siteUrl ?? site.siteUrl;
+  const selectedSiteName = resolveSelectedSiteName(snapshot?.siteName ?? site.name, selectedSiteUrl);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
@@ -27,8 +29,10 @@ export default async function SiteDiscoveryPage() {
         <Card>
           <CardHeader>
             <CardTitle>Selected site</CardTitle>
-            <CardDescription>
-              {site.name} · {site.siteUrl}
+            <CardDescription className="flex flex-wrap items-center gap-2">
+              <span>{selectedSiteName}</span>
+              <span className="text-slate-400">·</span>
+              <span className="font-medium text-teal-700">{selectedSiteUrl}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-slate-700">
@@ -71,4 +75,17 @@ export default async function SiteDiscoveryPage() {
       </div>
     </main>
   );
+}
+
+function resolveSelectedSiteName(name: string | null | undefined, siteUrl: string) {
+  const trimmed = name?.trim();
+  if (trimmed && !/^example wordpress site$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  try {
+    return new URL(siteUrl).hostname.replace(/^www\./i, '');
+  } catch {
+    return 'Configured site';
+  }
 }

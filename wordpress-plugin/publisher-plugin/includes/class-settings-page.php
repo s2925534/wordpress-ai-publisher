@@ -62,7 +62,15 @@ class Publisher_Settings_Page {
                                 autocomplete="off"
                             />
                             <p class="description">
-                                Copy the token from the app's Settings screen, then save it here.
+                                Copy the token from the app's Settings screen, or open the app's
+                                prefilled settings link, then save it here.
+                            </p>
+                            <p
+                                id="publisher_plugin_prefill_notice"
+                                class="description"
+                                style="display:none;"
+                            >
+                                Token prefilled from the app. Click Save Plugin Token to store it.
                             </p>
                         </td>
                     </tr>
@@ -70,6 +78,29 @@ class Publisher_Settings_Page {
                 <?php submit_button('Save Plugin Token'); ?>
             </form>
         </div>
+        <script>
+            (function () {
+                var hash = window.location.hash ? window.location.hash.slice(1) : '';
+                if (!hash) {
+                    return;
+                }
+
+                var params = new URLSearchParams(hash);
+                var token = params.get('publisher_plugin_token');
+                var input = document.getElementById('publisher_plugin_token');
+                var notice = document.getElementById('publisher_plugin_prefill_notice');
+
+                if (!token || !input) {
+                    return;
+                }
+
+                input.value = token;
+
+                if (notice) {
+                    notice.style.display = 'block';
+                }
+            })();
+        </script>
         <?php
     }
 }

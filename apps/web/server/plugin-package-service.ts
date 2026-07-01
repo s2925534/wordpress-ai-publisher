@@ -14,10 +14,6 @@ export class PluginPackageService {
 
   async ensurePluginZip() {
     const zipPath = this.getZipPath();
-    if (await exists(zipPath)) {
-      return zipPath;
-    }
-
     await execFileAsync('bash', [path.join(this.rootDir, 'scripts', 'package-wordpress-plugin.sh')], {
       cwd: this.rootDir
     });

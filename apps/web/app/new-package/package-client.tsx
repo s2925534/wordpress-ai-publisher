@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CopyButton } from '@/components/copy-button';
 import { Textarea } from '@/components/ui/textarea';
 import {
   generatedPackageResponseSchema,
@@ -173,7 +174,10 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
+      </div>
       <p className="mt-1 whitespace-pre-wrap">{value}</p>
     </div>
   );

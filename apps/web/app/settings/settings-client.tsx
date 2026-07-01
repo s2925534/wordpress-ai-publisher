@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CopyButton } from '@/components/copy-button';
 import { Input } from '@/components/ui/input';
 import { loadBrowserConfig, saveBrowserConfig } from '@/lib/browser-config-storage';
 
@@ -113,6 +114,10 @@ export function SettingsClient({ initialSettings }: Props) {
   }, [browserConfigLoaded, form]);
 
   const timezoneOptions = useMemo(() => buildTimezoneOptions(), []);
+  const pluginSettingsUrl = useMemo(
+    () => buildPluginSettingsUrl(form.wordpressSiteUrl, form.wordpressPluginToken),
+    [form.wordpressPluginToken, form.wordpressSiteUrl]
+  );
 
   async function saveSettings() {
     setIsSaving(true);
@@ -203,7 +208,15 @@ export function SettingsClient({ initialSettings }: Props) {
           />
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs uppercase tracking-wide text-slate-500">Site URL preview</p>
-            <p className="mt-1 break-all text-sm text-slate-900">{form.wordpressSiteUrl || 'Not set'}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <p className="break-all text-sm font-medium text-teal-700">
+                {form.wordpressSiteUrl || 'Not set'}
+              </p>
+              <CopyButton
+                value={form.wordpressSiteUrl}
+                className="h-8 rounded-lg px-3 py-1 text-xs"
+              />
+            </div>
           </div>
           {settings.completion.missing.length ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950">
@@ -360,10 +373,21 @@ export function SettingsClient({ initialSettings }: Props) {
               <Button variant="secondary" onClick={copyPluginToken}>
                 Copy token
               </Button>
+              {pluginSettingsUrl ? (
+                <a
+                  href={pluginSettingsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-500"
+                >
+                  Open plugin settings with token
+                </a>
+              ) : null}
             </div>
             <p className="text-xs text-slate-500 sm:col-span-2">
-              Optional until you install the custom WordPress plugin. Generate one here, then copy
-              it into the plugin settings in WordPress.
+              Optional until you install the custom WordPress plugin. Generate one here, then open
+              the plugin settings link to prefill the WordPress field. WordPress will still ask you
+              to save the plugin settings.
             </p>
           </CardContent>
         </Card>
@@ -382,6 +406,21 @@ function buildSiteUrl(protocol: 'http' | 'https', hostname: string) {
   }
 
   return `${protocol}://${hostname.trim().replace(/^\/+/, '')}`;
+}
+
+function buildPluginSettingsUrl(siteUrl: string, token: string) {
+  if (!siteUrl.trim() || !token.trim()) {
+    return '';
+  }
+
+  try {
+    const url = new URL('/wp-admin/options-general.php', siteUrl);
+    url.searchParams.set('page', 'publisher-plugin');
+    url.hash = new URLSearchParams({ publisher_plugin_token: token.trim() }).toString();
+    return url.toString();
+  } catch {
+    return '';
+  }
 }
 
 function buildTimezoneOptions() {

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CopyButton } from '@/components/copy-button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { buildImageFileName, validateAltText } from '@/lib/image-utils';
@@ -241,9 +242,12 @@ function EditableField({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={id}>
-        {label}
-      </label>
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+          {label}
+        </label>
+        <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
+      </div>
       {textarea ? (
         <Textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} />
       ) : (
@@ -279,7 +283,10 @@ function Field({
 function Preview({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
+      </div>
       <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{value}</p>
     </div>
   );

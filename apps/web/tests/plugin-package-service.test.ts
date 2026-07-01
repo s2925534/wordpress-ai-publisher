@@ -17,17 +17,31 @@ describe('PluginPackageService', () => {
     execFileMock.mockReset();
   });
 
-  it('returns an existing plugin zip without repackaging', async () => {
+  it('repackages an existing plugin zip from current source', async () => {
     const rootDir = mkdtempSync(path.join(os.tmpdir(), 'wap-plugin-'));
+    mkdirSync(path.join(rootDir, 'scripts'));
     mkdirSync(path.join(rootDir, 'dist'));
+    writeFileSync(path.join(rootDir, 'scripts', 'package-wordpress-plugin.sh'), '#!/usr/bin/env bash\n');
     const zipPath = path.join(rootDir, 'dist', 'publisher-plugin.zip');
     writeFileSync(zipPath, Buffer.from('zip'));
+
+    execFileMock.mockImplementation(
+      (
+        _command: string,
+        _args: string[],
+        options: { cwd?: string },
+        callback: (error: Error | null, result?: { stdout: string; stderr: string }) => void
+      ) => {
+        writeFileSync(path.join(options.cwd ?? rootDir, 'dist', 'publisher-plugin.zip'), Buffer.from('new-zip'));
+        callback(null, { stdout: '', stderr: '' });
+      }
+    );
 
     const service = new PluginPackageService(rootDir);
     const result = await service.ensurePluginZip();
 
     expect(result).toBe(zipPath);
-    expect(execFileMock).not.toHaveBeenCalled();
+    expect(execFileMock).toHaveBeenCalledOnce();
   });
 
   it('packages the plugin when the zip is missing', async () => {
