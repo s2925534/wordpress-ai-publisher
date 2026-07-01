@@ -32,8 +32,14 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
   const [generated, setGenerated] = useState<GeneratedPackageResponse | null>(null);
   const [message, setMessage] = useState('Ready to generate a package.');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const trimmedInputLength = inputText.trim().length;
 
   async function handleGenerate() {
+    if (trimmedInputLength < 20) {
+      setMessage(`Add at least ${20 - trimmedInputLength} more character${20 - trimmedInputLength === 1 ? '' : 's'} before generating.`);
+      return;
+    }
+
     setIsSubmitting(true);
     setMessage('Generating package...');
 
@@ -95,9 +101,12 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
             onChange={(event) => setInputText(event.target.value)}
             placeholder="Paste rough notes, source text, or an outline here."
           />
+          <p className="text-xs text-slate-500">
+            Minimum 20 characters. Current: {trimmedInputLength}.
+          </p>
         </div>
 
-        <Button onClick={handleGenerate} disabled={isSubmitting || inputText.trim().length < 20}>
+        <Button onClick={handleGenerate} disabled={isSubmitting}>
           {isSubmitting ? 'Generating...' : 'Generate package'}
         </Button>
 
