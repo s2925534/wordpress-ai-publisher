@@ -224,9 +224,11 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
 
         <div className="flex flex-wrap gap-3">
           <Button onClick={saveChanges} disabled={isBusy}>Save changes</Button>
-          <Button onClick={() => prepareImage()} variant="secondary" disabled={isBusy}>
-            {record.featureImageUrl ? 'Regenerate image' : 'Prepare image'}
-          </Button>
+          {!record.featureImageUrl ? (
+            <Button onClick={() => prepareImage()} variant="secondary" disabled={isBusy}>
+              Prepare image
+            </Button>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -260,22 +262,22 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
           <span className="text-xs font-bold uppercase tracking-wide text-slate-600">ID {packageId}</span>
         </div>
 
-        <Preview label="SEO readiness" value={`${record.seoPackage.readinessScore}/100`} />
-        <Preview label="SEO warnings" value={record.seoPackage.warnings.join(' | ') || 'None'} />
+        <Preview label="SEO readiness" value={`${record.seoPackage.readinessScore}/100`} copyable={false} />
+        <Preview label="SEO warnings" value={record.seoPackage.warnings.join(' | ') || 'None'} copyable={false} />
         <ChipPreview label="Selected categories" items={selectedCategories.map((category) => category.name)} />
         <ChipPreview label="Selected tags" items={selectedTagNames} />
-        <Preview label="Recommended categories" value={record.recommendedCategories.map((category) => `${category.name} (${category.confidence})`).join(', ')} />
-        <Preview label="Suggested new category" value={newCategoryName || 'None'} />
+        <Preview label="Recommended categories" value={record.recommendedCategories.map((category) => `${category.name} (${category.confidence})`).join(', ')} copyable={false} />
+        <Preview label="Suggested new category" value={newCategoryName || 'None'} copyable={false} />
         <ImagePreview
           imageUrl={record.featureImageUrl}
           altText={record.altText}
           filename={record.suggestedImageFileName}
           isBusy={isBusy}
-          onTryAgain={() => prepareImage('Regenerating featured image...')}
+          onTryAgain={() => prepareImage('Generating another featured image...')}
         />
-        <Preview label="Alt text validation" value={imageValidation.valid ? 'Valid' : imageValidation.reason} />
+        <Preview label="Alt text validation" value={imageValidation.valid ? 'Valid' : imageValidation.reason} copyable={false} />
         <Preview label="Suggested image filename" value={record.suggestedImageFileName || 'None'} />
-        <Preview label="Latest publish attempt" value={record.publishingAttempts?.[0] ? `${record.publishingAttempts[0].wordpressStatus} · ${record.publishingAttempts[0].wordpressPostUrl ?? ''}` : 'None'} />
+        <Preview label="Latest publish attempt" value={record.publishingAttempts?.[0] ? `${record.publishingAttempts[0].wordpressStatus} · ${record.publishingAttempts[0].wordpressPostUrl ?? ''}` : 'None'} copyable={false} />
       </div>
     </div>
   );
@@ -409,12 +411,12 @@ function Field({
   );
 }
 
-function Preview({ label, value }: { label: string; value: string }) {
+function Preview({ label, value, copyable = true }: { label: string; value: string; copyable?: boolean }) {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
-        <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
+        {copyable ? <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" /> : null}
       </div>
       <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{value}</p>
     </div>
@@ -453,7 +455,7 @@ function ImagePreview({
           />
           <div className="space-y-3">
             <Button variant="secondary" onClick={onTryAgain} disabled={isBusy} className="w-full">
-              {isBusy ? 'Working...' : 'Try again'}
+              {isBusy ? 'Working...' : 'Try another image'}
             </Button>
             <div className="rounded-xl border border-slate-200 bg-white/90 p-3 text-xs text-slate-700">
               <p className="font-bold text-slate-900">Filename</p>
@@ -468,7 +470,7 @@ function ImagePreview({
       ) : (
         <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-sm text-slate-600">
           <p className="font-semibold text-slate-800">No displayable image generated yet.</p>
-          <p className="mt-1">Click Prepare image to generate a preview, then use Try again if it is not suitable.</p>
+          <p className="mt-1">Click Prepare image to generate a preview, then use Try another image if it is not suitable.</p>
           {imageUrl ? <p className="mt-2 break-all text-xs text-slate-500">Stored image reference: {imageUrl}</p> : null}
         </div>
       )}
