@@ -10,6 +10,7 @@ import { createDefaultContentProfile, createDefaultSiteConfig } from '@/server/d
 import { MockAIProvider, type AIProvider } from '@/server/ai-provider';
 import { RecommendationService } from '@/server/recommendation-service';
 import type { SourceSafetyType } from '@/lib/ai-schemas';
+import type { GenerationInputMode } from '@/lib/generation-schemas';
 
 type PackageRecord = GeneratedPackageResponse & {
   id: string;
@@ -42,6 +43,7 @@ export class PackageService {
 
   async generate(input: {
     inputText: string;
+    inputMode?: GenerationInputMode;
     sourceSafetyType: SourceSafetyType;
     siteKey?: string;
     contentProfileKey?: string;
@@ -52,6 +54,7 @@ export class PackageService {
 
     const generated = await this.aiProvider.generatePublicationPackage({
       inputText: input.inputText,
+      inputMode: input.inputMode ?? 'ai_prompt',
       sourceSafetyType: input.sourceSafetyType,
       siteConfig,
       contentProfile,

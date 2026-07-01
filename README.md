@@ -139,23 +139,29 @@ Reinstall the plugin only when plugin files change. Pure app UI changes do not r
 
 1. Go to `New Package`.
 2. Paste at least 20 characters of rough notes or source material.
-3. Choose the source safety type.
-4. Review or edit the selected AI safeguard if needed.
-5. Click `Generate package`.
-6. Review the generated package preview.
-7. Open final confirmation.
-8. Edit title, LinkedIn post, excerpt, tags, SEO fields, alt text, and filename.
-9. Prepare a featured image.
-10. Click the image to inspect it in a larger overlay.
-11. Use `Try another image` if the image is not suitable.
-12. Confirm the final action.
-13. Create a WordPress draft by default, or explicitly choose publish/schedule.
+3. Choose whether the pasted text is an `AI prompt / instructions` or `Content / notes to transform`.
+4. Choose the source safety type.
+5. Review or edit the selected AI safeguard if needed.
+6. Click `Generate package`.
+7. Review the generated package preview.
+8. Open final confirmation.
+9. Edit title, LinkedIn post, excerpt, tags, SEO fields, alt text, and filename.
+10. Prepare a featured image.
+11. Click the image to inspect it in a larger overlay.
+12. Use `Try another image` if the image is not suitable.
+13. Confirm the final action.
+14. Create a WordPress draft by default, or explicitly choose publish/schedule.
 
 ## AI Safeguards
 
 AI safeguards are reusable generation rules. They are available in Settings and as a popup on the New Package screen. Both locations edit the same saved configuration.
 
 The built-in default safeguard is readonly. It tells the generator to treat task-style prompts as instructions. For example, `Write a joke about Australia` should generate the joke package, not produce a title or excerpt about the literal sentence.
+
+The New Package screen also has an input-mode selector:
+
+- `AI prompt / instructions`: use when the text box contains commands such as `Write a joke about Australia` or `Make the title minimum 3 words`.
+- `Content / notes to transform`: use when the text box contains draft copy, notes, transcripts, or source material that should be rewritten or improved.
 
 Create custom safeguards for different post types, such as jokes, technical posts, announcements, or long-form articles. Custom safeguards are saved with the browser configuration JSON and persisted through the local settings API.
 

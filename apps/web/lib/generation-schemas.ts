@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { sourceSafetySchema } from '@/lib/ai-schemas';
 import { aiSafeguardSchema } from '@/lib/ai-safeguards';
 
+export const generationInputModeSchema = z.enum(['ai_prompt', 'source_material']);
+
 export const generationRequestSchema = z.object({
   inputText: z.string().trim().min(20).max(8000),
+  inputMode: generationInputModeSchema.default('ai_prompt'),
   sourceSafetyType: sourceSafetySchema,
   siteKey: z.string().min(1).optional(),
   contentProfileKey: z.string().min(1).optional(),
@@ -66,3 +69,4 @@ export const generatedPackageResponseSchema = z.object({
 
 export type GenerationRequest = z.infer<typeof generationRequestSchema>;
 export type GeneratedPackageResponse = z.infer<typeof generatedPackageResponseSchema>;
+export type GenerationInputMode = z.infer<typeof generationInputModeSchema>;

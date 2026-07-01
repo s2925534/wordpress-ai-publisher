@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       inputText?: string;
+      inputMode?: 'ai_prompt' | 'source_material';
       sourceSafetyType?: 'my_own_text' | 'public_reference' | 'third_party_text' | 'notes_only' | 'unknown';
       siteKey?: string;
       contentProfileKey?: string;
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
     const service = getService();
     const result = await service.generate({
       inputText: body.inputText,
+      inputMode: body.inputMode,
       sourceSafetyType: body.sourceSafetyType,
       siteKey: body.siteKey,
       contentProfileKey: body.contentProfileKey,

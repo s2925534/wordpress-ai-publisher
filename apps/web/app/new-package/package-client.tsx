@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { defaultAiSafeguard, normalizeAiSafeguards, resolveSelectedSafeguard, type AiSafeguard } from '@/lib/ai-safeguards';
 import {
   generatedPackageResponseSchema,
+  type GenerationInputMode,
   type GeneratedPackageResponse
 } from '@/lib/generation-schemas';
 import { formatTagName } from '@/lib/text-utils';
@@ -37,6 +38,7 @@ export function NewPackageClient({
   initialSelectedAiSafeguardId
 }: Props) {
   const [inputText, setInputText] = useState('');
+  const [inputMode, setInputMode] = useState<GenerationInputMode>('ai_prompt');
   const [sourceSafetyType, setSourceSafetyType] = useState<(typeof sourceSafetyOptions)[number]['value']>('notes_only');
   const [generated, setGenerated] = useState<GeneratedPackageResponse | null>(null);
   const [message, setMessage] = useState('Ready to generate a package.');
@@ -92,6 +94,7 @@ export function NewPackageClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           inputText,
+          inputMode,
           sourceSafetyType,
           siteKey: defaultSiteKey,
           contentProfileKey: defaultContentProfileKey,
@@ -117,6 +120,46 @@ export function NewPackageClient({
   return (
     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-4">
+        <div className="space-y-2">
+          <fieldset className="rounded-2xl border border-slate-200 bg-white p-4">
+            <legend className="px-1 text-sm font-semibold text-slate-800">What are you pasting?</legend>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm transition hover:border-teal-300">
+                <input
+                  type="radio"
+                  name="input-mode"
+                  value="ai_prompt"
+                  checked={inputMode === 'ai_prompt'}
+                  onChange={() => setInputMode('ai_prompt')}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block font-bold text-slate-900">AI prompt / instructions</span>
+                  <span className="mt-1 block text-slate-600">
+                    Use this for requests like "write a joke" or "make the title minimum 3 words."
+                  </span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm transition hover:border-teal-300">
+                <input
+                  type="radio"
+                  name="input-mode"
+                  value="source_material"
+                  checked={inputMode === 'source_material'}
+                  onChange={() => setInputMode('source_material')}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block font-bold text-slate-900">Content / notes to transform</span>
+                  <span className="mt-1 block text-slate-600">
+                    Use this when the box contains draft text, notes, or source material to rewrite.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+
         <div className="space-y-2">
           <label className="text-sm font-semibold text-slate-800" htmlFor="source-safety">
             Source safety

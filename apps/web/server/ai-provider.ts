@@ -7,6 +7,7 @@ import {
   type SeoPackage,
   type SourceSafetyType
 } from '@/lib/ai-schemas';
+import type { GenerationInputMode } from '@/lib/generation-schemas';
 import type { ContentProfileConfig, SiteConfig } from '@/lib/config-schemas';
 import type { AiSafeguard } from '@/lib/ai-safeguards';
 import {
@@ -20,6 +21,7 @@ import { buildDefaultContentProfilePrompt } from '@/server/ai-prompt-builder';
 
 export type PackageGenerationInput = {
   inputText: string;
+  inputMode?: GenerationInputMode;
   sourceSafetyType: SourceSafetyType;
   siteConfig: SiteConfig;
   contentProfile: ContentProfileConfig;
@@ -55,7 +57,7 @@ export interface AIProvider {
 
 export class MockAIProvider implements AIProvider {
   async generatePublicationPackage(input: PackageGenerationInput): Promise<PublicationPackage> {
-    const title = this.buildTitle(input.inputText);
+    const title = this.buildTitle(input.inputText, input.inputMode);
     const seoPackage = await this.generateSeoPackage({ ...input, title });
     const featureImagePrompt = await this.generateImagePrompt({ ...input, title });
     const altText = await this.generateAltText({ ...input, title, imagePrompt: featureImagePrompt });
@@ -78,7 +80,7 @@ export class MockAIProvider implements AIProvider {
   }
 
   async generateSeoPackage(input: SeoGenerationInput): Promise<SeoPackage> {
-    const title = input.title ?? this.buildTitle(input.inputText);
+    const title = input.title ?? this.buildTitle(input.inputText, input.inputMode);
     const slug = slugify(title);
     const metaDescription = summarizeText(input.inputText, 24);
 
@@ -140,7 +142,7 @@ export class MockAIProvider implements AIProvider {
 
     switch (input.section) {
       case 'title':
-        return this.buildTitle(input.inputText);
+        return this.buildTitle(input.inputText, input.inputMode);
       case 'linkedinPost':
         return this.buildLinkedInPost(input);
       case 'excerpt':
@@ -156,7 +158,7 @@ export class MockAIProvider implements AIProvider {
       case 'featureImagePrompt':
         return this.buildFeatureImagePrompt(input);
       case 'featureImage':
-        return `mock://image/${slugify(this.buildTitle(input.inputText))}.png`;
+        return `mock://image/${slugify(this.buildTitle(input.inputText, input.inputMode))}.png`;
       case 'altText':
         return this.buildAltText(input);
       case 'introduction':
@@ -168,10 +170,11 @@ export class MockAIProvider implements AIProvider {
     }
   }
 
-  private buildTitle(inputText: string) {
-    const task = parseTaskInstruction(inputText);
+  private buildTitle(inputText: string, inputMode: GenerationInputMode = 'ai_prompt') {
+    const task = parseTaskInstruction(inputText, inputMode);
     if (task) {
-      return titleCase(task.topic.replace(/[.!?]+$/g, ''));
+      const title = titleCase(task.topic.replace(/[.!?]+$/g, ''));
+      return enforceTitleMinimum(title, task.titleMinimumWords);
     }
 
     const summary = summarizeText(firstSentence(inputText) || inputText, 10);
@@ -179,13 +182,13 @@ export class MockAIProvider implements AIProvider {
   }
 
   private buildLinkedInPost(input: PackageGenerationInput) {
-    const title = this.buildTitle(input.inputText);
+    const title = this.buildTitle(input.inputText, input.inputMode);
     const hashtags = input.siteConfig.hashtags.preferred.slice(0, 3).join(' ');
-    const task = parseTaskInstruction(input.inputText);
+    const task = parseTaskInstruction(input.inputText, input.inputMode);
 
     if (task?.kind === 'joke') {
       return [
-        `A kangaroo walks into a stand-up meeting and says, "I can jump over blockers, but even I cannot clear the backlog before Friday."`,
+        `A kangaroo walks into a stand-up meeting in Australia and says, "I can jump over blockers, but even I cannot clear the backlog before Friday."`,
         `The emu nods and replies, "That is why we call it agile, mate. Nobody said it was graceful."`,
         hashtags
       ].filter(Boolean).join('\n\n');
@@ -200,7 +203,7 @@ export class MockAIProvider implements AIProvider {
   }
 
   private buildExcerpt(input: PackageGenerationInput) {
-    const task = parseTaskInstruction(input.inputText);
+    const task = parseTaskInstruction(input.inputText, input.inputMode);
     if (task?.kind === 'joke') {
       return `A light, workplace-friendly joke about ${task.topic.toLowerCase()}.`;
     }
@@ -231,11 +234,11 @@ export class MockAIProvider implements AIProvider {
   }
 
   private buildFeatureImagePrompt(input: PackageGenerationInput) {
-    return `Create a ${input.siteConfig.image.style.join(', ')} image for ${this.buildTitle(input.inputText)}.`;
+    return `Create a ${input.siteConfig.image.style.join(', ')} image for ${this.buildTitle(input.inputText, input.inputMode)}.`;
   }
 
   private buildAltText(input: PackageGenerationInput) {
-    return `Featured image for ${this.buildTitle(input.inputText)}.`;
+    return `Featured image for ${this.buildTitle(input.inputText, input.inputMode)}.`;
   }
 }
 
@@ -360,14 +363,33 @@ function escapeSvgText(value: string) {
     .replace(/"/g, '&quot;');
 }
 
-function parseTaskInstruction(inputText: string) {
+function parseTaskInstruction(inputText: string, inputMode: GenerationInputMode = 'ai_prompt') {
+  if (inputMode !== 'ai_prompt') {
+    return null;
+  }
+
   const text = inputText.trim();
-  const match = text.match(/^(?:please\s+)?(?:write|create|draft|generate|make)\s+(?:me\s+)?(?:a|an|the)?\s*(joke|post|article|blog post|summary|title)\s+(?:about|on|for)\s+(.+?)[.!?]*$/i);
+  const match = text.match(/(?:please\s+)?(?:write|create|draft|generate|make)\s+(?:me\s+)?(?:a|an|the)?\s*(joke|post|article|blog post|summary|title)\s+(?:about|on|for)\s+([^.!?]+)[.!?]?/i);
   if (!match) {
     return null;
   }
 
   const kind = match[1].toLowerCase().replace(/\s+/g, '-');
   const topic = match[2].trim();
-  return { kind, topic };
+  const titleMinimumWords = Number(text.match(/title\s+(?:minimum|min|at least)\s+(\d+)\s+words?/i)?.[1] ?? 0) || undefined;
+  return { kind, topic, titleMinimumWords };
+}
+
+function enforceTitleMinimum(title: string, minimumWords?: number) {
+  if (!minimumWords) {
+    return title;
+  }
+
+  const words = title.split(/\s+/).filter(Boolean);
+  if (words.length >= minimumWords) {
+    return title;
+  }
+
+  const filler = ['Story', 'Feature', 'Post', 'Guide'];
+  return [...words, ...filler].slice(0, minimumWords).join(' ');
 }

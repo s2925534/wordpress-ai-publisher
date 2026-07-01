@@ -38,15 +38,31 @@ describe('AI provider foundation', () => {
   it('treats task-style prompts as instructions rather than literal source text', async () => {
     const provider = new MockAIProvider();
     const packageResult = await provider.generatePublicationPackage({
-      inputText: 'Write a joke about Australia.',
+      inputText: 'Write a joke about Australia. Make the title minimum 3 words.',
+      inputMode: 'ai_prompt',
       sourceSafetyType: 'notes_only',
       siteConfig: createDefaultSiteConfig('https://example.com'),
       contentProfile: createDefaultContentProfile()
     });
 
-    expect(packageResult.title).toBe('Australia');
+    expect(packageResult.title.split(/\s+/)).toHaveLength(3);
+    expect(packageResult.title).toContain('Australia');
     expect(packageResult.excerpt).toContain('joke about australia');
     expect(packageResult.linkedinPost).not.toContain('Write a joke about Australia');
+  });
+
+  it('keeps instruction-like text literal when source material mode is selected', async () => {
+    const provider = new MockAIProvider();
+    const packageResult = await provider.generatePublicationPackage({
+      inputText: 'Write a joke about Australia.',
+      inputMode: 'source_material',
+      sourceSafetyType: 'notes_only',
+      siteConfig: createDefaultSiteConfig('https://example.com'),
+      contentProfile: createDefaultContentProfile()
+    });
+
+    expect(packageResult.title).toContain('Write A Joke About Australia');
+    expect(packageResult.excerpt).toContain('Write a joke about Australia');
   });
 
   it('returns a displayable mock image preview', async () => {

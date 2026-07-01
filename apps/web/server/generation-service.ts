@@ -1,4 +1,4 @@
-import { generatedPackageResponseSchema, generationRequestSchema } from '@/lib/generation-schemas';
+import { generatedPackageResponseSchema, generationRequestSchema, type GenerationInputMode } from '@/lib/generation-schemas';
 import { MockAIProvider, type AIProvider } from '@/server/ai-provider';
 import { ConfigService } from '@/server/config-service';
 import { createDefaultContentProfile, createDefaultSiteConfig } from '@/server/default-config';
@@ -8,6 +8,7 @@ import type { AiSafeguard } from '@/lib/ai-safeguards';
 
 type GeneratePackageInput = {
   inputText: string;
+  inputMode?: GenerationInputMode;
   sourceSafetyType: SourceSafetyType;
   siteKey?: string;
   contentProfileKey?: string;
@@ -32,6 +33,7 @@ export class GenerationService {
 
     const packageResult = await this.aiProvider.generatePublicationPackage({
       inputText: parsed.inputText,
+      inputMode: parsed.inputMode,
       sourceSafetyType: parsed.sourceSafetyType,
       siteConfig,
       contentProfile,
