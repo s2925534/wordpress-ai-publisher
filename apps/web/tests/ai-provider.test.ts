@@ -31,5 +31,20 @@ describe('AI provider foundation', () => {
     expect(packageResult.seoPackage.slug).toBeTruthy();
     expect(packageResult.sourceSafetyType).toBe('notes_only');
     expect(packageResult.recommendedCategories).toHaveLength(1);
+    expect(packageResult.excerpt).not.toContain('Written for');
+    expect(packageResult.seoPackage.metaDescription).not.toContain('A professional WordPress publishing site');
+  });
+
+  it('returns a displayable mock image preview', async () => {
+    const provider = new MockAIProvider();
+    const image = await provider.generateImage({
+      inputText: 'Draft notes about practical image previews.',
+      sourceSafetyType: 'notes_only',
+      siteConfig: createDefaultSiteConfig('https://example.com'),
+      contentProfile: createDefaultContentProfile(),
+      title: 'Practical Image Preview'
+    });
+
+    expect(image.imageUrl).toMatch(/^data:image\/svg\+xml/);
   });
 });

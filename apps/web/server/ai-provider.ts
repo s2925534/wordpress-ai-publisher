@@ -78,7 +78,7 @@ export class MockAIProvider implements AIProvider {
   async generateSeoPackage(input: SeoGenerationInput): Promise<SeoPackage> {
     const title = input.title ?? this.buildTitle(input.inputText);
     const slug = slugify(title);
-    const metaDescription = `${summarizeText(input.inputText, 22)}. ${input.siteConfig.brand.positioning}`;
+    const metaDescription = summarizeText(input.inputText, 24);
 
     return seoPackageSchema.parse({
       seoTitle: title,
@@ -94,12 +94,38 @@ export class MockAIProvider implements AIProvider {
   }
 
   async generateImagePrompt(input: ImagePromptInput): Promise<string> {
-    return `Create a ${input.siteConfig.image.style.join(', ')} featured image for "${input.title}". Emphasize ${input.siteConfig.brand.positioning.toLowerCase()}. Avoid ${input.siteConfig.image.avoid.join(', ')}.`;
+    return `Create a ${input.siteConfig.image.style.join(', ')} featured image for "${input.title}". Avoid ${input.siteConfig.image.avoid.join(', ')}.`;
   }
 
   async generateImage(input: ImagePromptInput): Promise<{ imageUrl: string | null }> {
+    const title = summarizeText(input.title, 6);
+    const svg = [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">',
+      '<defs>',
+      '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">',
+      '<stop offset="0%" stop-color="#0f766e"/>',
+      '<stop offset="50%" stop-color="#134e4a"/>',
+      '<stop offset="100%" stop-color="#111827"/>',
+      '</linearGradient>',
+      '<radialGradient id="glow" cx="30%" cy="25%" r="70%">',
+      '<stop offset="0%" stop-color="#ccfbf1" stop-opacity="0.75"/>',
+      '<stop offset="100%" stop-color="#ccfbf1" stop-opacity="0"/>',
+      '</radialGradient>',
+      '</defs>',
+      '<rect width="1024" height="1024" fill="url(#bg)"/>',
+      '<circle cx="250" cy="230" r="270" fill="url(#glow)"/>',
+      '<rect x="150" y="240" width="724" height="500" rx="48" fill="#ffffff" fill-opacity="0.12" stroke="#ccfbf1" stroke-opacity="0.55" stroke-width="3"/>',
+      '<path d="M230 610 C350 470, 440 690, 560 520 S760 410, 815 550" fill="none" stroke="#5eead4" stroke-width="18" stroke-linecap="round"/>',
+      '<circle cx="300" cy="430" r="42" fill="#f8fafc" fill-opacity="0.9"/>',
+      '<circle cx="500" cy="600" r="32" fill="#f8fafc" fill-opacity="0.85"/>',
+      '<circle cx="735" cy="465" r="52" fill="#f8fafc" fill-opacity="0.88"/>',
+      `<text x="512" y="815" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#f8fafc">${escapeSvgText(title)}</text>`,
+      '<text x="512" y="870" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#ccfbf1">Generated featured image preview</text>',
+      '</svg>'
+    ].join('');
+
     return {
-      imageUrl: `mock://image/${slugify(input.title)}.png`
+      imageUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
     };
   }
 
@@ -158,7 +184,7 @@ export class MockAIProvider implements AIProvider {
 
   private buildExcerpt(input: PackageGenerationInput) {
     const summary = summarizeText(input.inputText, 28);
-    return `${summary}. Written for ${input.siteConfig.brand.displayName}.`;
+    return summary.endsWith('.') ? summary : `${summary}.`;
   }
 
   private buildRecommendedTags(input: PackageGenerationInput) {
@@ -302,4 +328,12 @@ export class OpenAIProvider implements AIProvider {
 
     return content;
   }
+}
+
+function escapeSvgText(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }

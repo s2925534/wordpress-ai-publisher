@@ -97,9 +97,9 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
     }
   }
 
-  async function prepareImage() {
+  async function prepareImage(actionLabel = 'Preparing featured image...') {
     setIsBusy(true);
-    setMessage('Preparing featured image...');
+    setMessage(actionLabel);
     try {
       const response = await fetch(`/api/packages/${packageId}/image`, { method: 'POST' });
       const payload = await response.json();
@@ -224,7 +224,9 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
 
         <div className="flex flex-wrap gap-3">
           <Button onClick={saveChanges} disabled={isBusy}>Save changes</Button>
-          <Button onClick={prepareImage} variant="secondary" disabled={isBusy}>Prepare image</Button>
+          <Button onClick={() => prepareImage()} variant="secondary" disabled={isBusy}>
+            {record.featureImageUrl ? 'Regenerate image' : 'Prepare image'}
+          </Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -264,7 +266,13 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
         <ChipPreview label="Selected tags" items={selectedTagNames} />
         <Preview label="Recommended categories" value={record.recommendedCategories.map((category) => `${category.name} (${category.confidence})`).join(', ')} />
         <Preview label="Suggested new category" value={newCategoryName || 'None'} />
-        <Preview label="Image preview" value={record.featureImageUrl ?? 'No image generated yet'} />
+        <ImagePreview
+          imageUrl={record.featureImageUrl}
+          altText={record.altText}
+          filename={record.suggestedImageFileName}
+          isBusy={isBusy}
+          onTryAgain={() => prepareImage('Regenerating featured image...')}
+        />
         <Preview label="Alt text validation" value={imageValidation.valid ? 'Valid' : imageValidation.reason} />
         <Preview label="Suggested image filename" value={record.suggestedImageFileName || 'None'} />
         <Preview label="Latest publish attempt" value={record.publishingAttempts?.[0] ? `${record.publishingAttempts[0].wordpressStatus} · ${record.publishingAttempts[0].wordpressPostUrl ?? ''}` : 'None'} />
@@ -413,6 +421,61 @@ function Preview({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ImagePreview({
+  imageUrl,
+  altText,
+  filename,
+  isBusy,
+  onTryAgain
+}: {
+  imageUrl?: string | null;
+  altText: string;
+  filename: string;
+  isBusy: boolean;
+  onTryAgain: () => void;
+}) {
+  const canRenderImage = Boolean(imageUrl && isRenderableImageUrl(imageUrl));
+  const copyValue = [filename, altText, imageUrl].filter(Boolean).join('\n');
+
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-700">Image preview</p>
+        <CopyButton value={copyValue || 'No image generated yet'} className="h-8 rounded-lg px-3 py-1 text-xs" />
+      </div>
+
+      {canRenderImage && imageUrl ? (
+        <div className="mt-3 grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
+          <img
+            src={imageUrl}
+            alt={altText || 'Generated featured image preview'}
+            className="aspect-square w-full rounded-2xl border border-slate-200 bg-white object-cover shadow-sm"
+          />
+          <div className="space-y-3">
+            <Button variant="secondary" onClick={onTryAgain} disabled={isBusy} className="w-full">
+              {isBusy ? 'Working...' : 'Try again'}
+            </Button>
+            <div className="rounded-xl border border-slate-200 bg-white/90 p-3 text-xs text-slate-700">
+              <p className="font-bold text-slate-900">Filename</p>
+              <p className="mt-1 break-all">{filename || 'Not generated yet'}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/90 p-3 text-xs text-slate-700">
+              <p className="font-bold text-slate-900">Alt text</p>
+              <p className="mt-1">{altText || 'Missing alt text'}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-sm text-slate-600">
+          <p className="font-semibold text-slate-800">No displayable image generated yet.</p>
+          <p className="mt-1">Click Prepare image to generate a preview, then use Try again if it is not suitable.</p>
+          {imageUrl ? <p className="mt-2 break-all text-xs text-slate-500">Stored image reference: {imageUrl}</p> : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ChipPreview({ label, items }: { label: string; items: string[] }) {
   const copyValue = items.join(', ');
 
@@ -438,6 +501,10 @@ function ChipPreview({ label, items }: { label: string; items: string[] }) {
       </div>
     </div>
   );
+}
+
+function isRenderableImageUrl(value: string) {
+  return /^(https?:|data:image\/|blob:)/i.test(value);
 }
 
 function normalizePackageRecord(record: PackageRecord): PackageRecord {

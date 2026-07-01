@@ -406,6 +406,14 @@ export class PackageService {
   }
 
   private async loadSiteConfig(siteKey?: string) {
+    const resolvedSiteKey = siteKey ?? process.env.DEFAULT_SITE_KEY ?? 'default-site';
+    const baseConfig = await this.loadSiteConfigFile(resolvedSiteKey);
+    const site = await this.prisma.wordPressSite.findUnique({ where: { siteKey: resolvedSiteKey } });
+
+    return site ? applySiteRecordToConfig(baseConfig, site) : baseConfig;
+  }
+
+  private async loadSiteConfigFile(siteKey: string) {
     if (!siteKey) {
       return createDefaultSiteConfig(process.env.APP_URL ?? 'http://localhost:3000');
     }
@@ -418,12 +426,8 @@ export class PackageService {
 
   private async loadSiteConfigBySiteId(siteId: string) {
     const site = await this.resolveSiteById(siteId);
-    const config = await this.loadSiteConfig(site.siteKey);
-    return {
-      ...config,
-      siteName: site.name || config.siteName,
-      siteUrl: site.siteUrl || config.siteUrl
-    };
+    const config = await this.loadSiteConfigFile(site.siteKey);
+    return applySiteRecordToConfig(config, site);
   }
 
   private async loadContentProfile(profileKey?: string) {
@@ -444,4 +448,44 @@ export class PackageService {
     }
     return this.loadContentProfile(profile.profileKey);
   }
+}
+
+function applySiteRecordToConfig(config: Awaited<ReturnType<ConfigService['loadSiteConfig']>>, site: any) {
+  const siteUrl = site.siteUrl || config.siteUrl;
+  const hostname = safeHostname(siteUrl);
+  const siteName = isPlaceholderSiteName(site.name) ? hostname : site.name || hostname || config.siteName;
+  const displayName = isPlaceholderSiteName(config.brand.displayName)
+    ? siteName
+    : config.brand.displayName;
+  const positioning = isGenericPositioning(config.brand.positioning)
+    ? `Publishing site at ${hostname || siteName}.`
+    : config.brand.positioning;
+
+  return {
+    ...config,
+    siteName,
+    siteUrl,
+    brand: {
+      ...config.brand,
+      displayName,
+      positioning
+    }
+  };
+}
+
+function safeHostname(siteUrl: string) {
+  try {
+    return new URL(siteUrl).hostname.replace(/^www\./, '');
+  } catch {
+    return siteUrl.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+  }
+}
+
+function isPlaceholderSiteName(value?: string | null) {
+  if (!value) return true;
+  return ['default site', 'example wordpress site', 'example site'].includes(value.trim().toLowerCase());
+}
+
+function isGenericPositioning(value?: string | null) {
+  return !value || value.trim().toLowerCase() === 'a professional wordpress publishing site.';
 }

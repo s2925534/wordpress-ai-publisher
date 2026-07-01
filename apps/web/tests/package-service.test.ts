@@ -143,7 +143,7 @@ describe('PackageService', () => {
 
     const image = await service.prepareImage(generated.packageId ?? '');
 
-    expect(image.imageUrl).toContain('mock://image/');
+    expect(image.imageUrl).toContain('data:image/svg+xml');
     expect(prisma.__state.images).toHaveLength(1);
   });
 
