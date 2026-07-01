@@ -78,10 +78,20 @@ class Publisher_Site_Discovery {
 
         $items = array();
         foreach ($posts as $post) {
+            $slug = trim($post->post_name);
+
+            if (empty($slug)) {
+                $slug = sanitize_title(get_the_title($post));
+            }
+
+            if (empty($slug)) {
+                $slug = 'post-' . intval($post->ID);
+            }
+
             $items[] = array(
                 'id' => intval($post->ID),
                 'title' => get_the_title($post),
-                'slug' => $post->post_name,
+                'slug' => $slug,
                 'url' => get_permalink($post),
                 'status' => $post->post_status,
             );

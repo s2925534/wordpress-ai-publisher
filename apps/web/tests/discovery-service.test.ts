@@ -142,4 +142,126 @@ describe('DiscoveryService', () => {
     expect(result.snapshot.restApiAvailable).toBe(false);
     expect(mockPrisma.__state.snapshots).toHaveLength(1);
   });
+
+  it('uses the stored site url instead of the config url when refreshing', async () => {
+    const configDir = createConfigDir();
+    const mockPrisma = createMockPrisma();
+    const service = new DiscoveryService(configDir, {
+      prisma: mockPrisma as any,
+      fetchFn: async (input) => {
+        expect(input.toString()).toContain('https://www.veloso.dev/wp-json/publisher/v1/discovery');
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              siteInfo: {
+                siteName: 'Veloso',
+                siteUrl: 'https://www.veloso.dev',
+                timezone: 'UTC',
+                locale: 'en-US',
+                restApiAvailable: true
+              },
+              canCreatePosts: true,
+              canPublishPosts: true,
+              canUploadMedia: true,
+              canCreateCategories: true,
+              canCreateTags: true,
+              availablePostTypes: [],
+              availablePostStatuses: [],
+              categories: [],
+              tags: [],
+              authors: [],
+              recentPosts: [],
+              jetpackStatus: {
+                installed: true,
+                active: true,
+                connected: true,
+                socialAvailable: true
+              },
+              seoPluginStatus: {},
+              mediaSettings: { maxUploadSize: 1024, mimeTypes: [] }
+            },
+            error: null
+          }),
+          { status: 200 }
+        ) as Response;
+      }
+    });
+
+    await service.getDefaultSiteRecord();
+    await mockPrisma.wordPressSite.upsert({
+      where: { siteKey: 'default-site' },
+      update: { siteUrl: 'https://www.veloso.dev', siteHostname: 'www.veloso.dev' },
+      create: {
+        siteKey: 'default-site',
+        name: 'Veloso',
+        siteUrl: 'https://www.veloso.dev',
+        siteProtocol: 'https',
+        siteHostname: 'www.veloso.dev',
+        timezone: null,
+        defaultStatus: 'draft'
+      }
+    });
+
+    const result = await service.refresh('default-site');
+
+    expect(result.source).toBe('plugin');
+    expect(result.snapshot.siteUrl).toBe('https://www.veloso.dev');
+  });
+
+  it('normalizes recent posts with missing slugs instead of falling back', async () => {
+    const configDir = createConfigDir();
+    const mockPrisma = createMockPrisma();
+    const service = new DiscoveryService(configDir, {
+      prisma: mockPrisma as any,
+      fetchFn: async () =>
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              siteInfo: {
+                siteName: 'Veloso',
+                siteUrl: 'https://www.veloso.dev',
+                timezone: 'UTC',
+                locale: 'en-US',
+                restApiAvailable: true
+              },
+              canCreatePosts: true,
+              canPublishPosts: true,
+              canUploadMedia: true,
+              canCreateCategories: true,
+              canCreateTags: true,
+              availablePostTypes: [],
+              availablePostStatuses: [],
+              categories: [],
+              tags: [],
+              authors: [],
+              recentPosts: [
+                {
+                  id: 11,
+                  title: 'Recent post',
+                  url: 'https://www.veloso.dev/recent-post',
+                  status: 'publish'
+                }
+              ],
+              jetpackStatus: {
+                installed: true,
+                active: true,
+                connected: true,
+                socialAvailable: true
+              },
+              seoPluginStatus: {},
+              mediaSettings: { maxUploadSize: 1024, mimeTypes: [] }
+            },
+            error: null
+          }),
+          { status: 200 }
+        ) as Response
+    });
+
+    const result = await service.refresh('default-site');
+
+    expect(result.source).toBe('plugin');
+    expect(result.snapshot.recentPosts[0]?.slug).toBe('recent-post');
+  });
 });

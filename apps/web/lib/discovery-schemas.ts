@@ -17,8 +17,8 @@ const authorSchema = z.object({
 const recentPostSchema = z.object({
   id: z.number().int().nonnegative(),
   title: z.string().min(1),
-  slug: z.string().min(1),
-  url: z.string().url(),
+  slug: z.string().optional(),
+  url: z.union([z.string().url(), z.literal('')]).optional(),
   status: z.string().min(1)
 });
 

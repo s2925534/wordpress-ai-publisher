@@ -78,7 +78,8 @@ export class DiscoveryService {
   async refresh(siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site'): Promise<DiscoveryResult> {
     const siteConfig = await this.configService.loadSiteConfig(siteKey);
     const site = await this.getSite(siteKey, siteConfig);
-    const endpoint = new URL('/wp-json/' + siteConfig.plugin.routeNamespace + '/discovery', siteConfig.siteUrl);
+    const siteUrl = this.resolveSiteUrl(site, siteConfig.siteUrl);
+    const endpoint = new URL('/wp-json/' + siteConfig.plugin.routeNamespace + '/discovery', siteUrl);
 
     try {
       const response = await this.deps.fetchFn(endpoint, {
@@ -97,7 +98,7 @@ export class DiscoveryService {
         throw new Error(parsedEnvelope.error?.message ?? 'Discovery response was unsuccessful');
       }
 
-      const normalized = this.normalizeSnapshot(parsedEnvelope.data, siteConfig.siteUrl);
+      const normalized = this.normalizeSnapshot(parsedEnvelope.data, siteUrl);
       const snapshot = discoverySnapshotSchema.parse(normalized);
 
       await this.deps.prisma.wordPressSiteSnapshot.create({
@@ -132,7 +133,7 @@ export class DiscoveryService {
         source: 'plugin'
       };
     } catch (error) {
-      const fallback = this.buildFallbackSnapshot(siteConfig);
+      const fallback = this.buildFallbackSnapshot(siteConfig, siteUrl);
       await this.deps.prisma.wordPressSiteSnapshot.create({
         data: {
           wordpressSiteId: site.id,
@@ -203,6 +204,10 @@ export class DiscoveryService {
     return decryptSecret(site?.encryptedPluginToken);
   }
 
+  private resolveSiteUrl(site: { siteUrl?: string | null }, fallbackSiteUrl: string) {
+    return site.siteUrl?.trim() || fallbackSiteUrl;
+  }
+
   private normalizeSnapshot(data: PluginDiscoveryData, fallbackSiteUrl: string) {
     return {
       siteName: data.siteInfo.siteName,
@@ -220,17 +225,28 @@ export class DiscoveryService {
       categories: data.categories,
       tags: data.tags,
       authors: data.authors,
-      recentPosts: data.recentPosts,
+      recentPosts: data.recentPosts.map((post) => {
+        const slug = this.resolveRecentPostSlug(post);
+
+        return {
+          ...post,
+          slug,
+          url: post.url ?? new URL(`/${slug}`, fallbackSiteUrl).toString()
+        };
+      }),
       jetpackStatus: data.jetpackStatus,
       seoPluginStatus: data.seoPluginStatus,
       mediaSettings: data.mediaSettings
     };
   }
 
-  private buildFallbackSnapshot(siteConfig: Awaited<ReturnType<ConfigService['loadSiteConfig']>>) {
+  private buildFallbackSnapshot(
+    siteConfig: Awaited<ReturnType<ConfigService['loadSiteConfig']>>,
+    fallbackSiteUrl: string
+  ) {
     return discoverySnapshotSchema.parse({
       siteName: siteConfig.siteName,
-      siteUrl: siteConfig.siteUrl,
+      siteUrl: fallbackSiteUrl,
       timezone: null,
       locale: null,
       restApiAvailable: false,
@@ -256,5 +272,36 @@ export class DiscoveryService {
         mimeTypes: []
       }
     });
+  }
+
+  private resolveRecentPostSlug(post: {
+    slug?: string | null;
+    title: string;
+    id: number;
+    url?: string | null;
+  }) {
+    const slug = post.slug?.trim();
+    if (slug) {
+      return slug;
+    }
+
+    if (post.url) {
+      try {
+        const pathname = new URL(post.url).pathname.replace(/\/+$/, '');
+        const fromPath = pathname.split('/').filter(Boolean).at(-1)?.trim();
+        if (fromPath) {
+          return fromPath;
+        }
+      } catch {
+        // Fall through to title/id based fallback.
+      }
+    }
+
+    const titleSlug = post.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    return titleSlug || `post-${post.id}`;
   }
 }

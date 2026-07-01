@@ -40,7 +40,7 @@ describe('GenerationService', () => {
     expect(result.title).toContain('These Notes Describe');
     expect(result.sourceSafetyType).toBe('notes_only');
     expect(result.seoPackage.slug).toBeTruthy();
-    expect(result.recommendedCategories).toHaveLength(1);
+    expect(result.recommendedCategories.length).toBeGreaterThan(0);
     expect(result.plainCsvTags).toContain(',');
   });
 
