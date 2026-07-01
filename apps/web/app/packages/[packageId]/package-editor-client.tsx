@@ -438,6 +438,7 @@ function ImagePreview({
 }) {
   const canRenderImage = Boolean(imageUrl && isRenderableImageUrl(imageUrl));
   const copyValue = [filename, altText, imageUrl].filter(Boolean).join('\n');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
@@ -448,11 +449,21 @@ function ImagePreview({
 
       {canRenderImage && imageUrl ? (
         <div className="mt-3 grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
-          <img
-            src={imageUrl}
-            alt={altText || 'Generated featured image preview'}
-            className="aspect-square w-full rounded-2xl border border-slate-200 bg-white object-cover shadow-sm"
-          />
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+            aria-label="Open larger image preview"
+          >
+            <img
+              src={imageUrl}
+              alt={altText || 'Generated featured image preview'}
+              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+            />
+            <span className="absolute inset-x-4 bottom-4 rounded-full bg-slate-950/80 px-3 py-2 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+              Click to enlarge
+            </span>
+          </button>
           <div className="space-y-3">
             <Button variant="secondary" onClick={onTryAgain} disabled={isBusy} className="w-full">
               {isBusy ? 'Working...' : 'Try another image'}
@@ -474,6 +485,70 @@ function ImagePreview({
           {imageUrl ? <p className="mt-2 break-all text-xs text-slate-500">Stored image reference: {imageUrl}</p> : null}
         </div>
       )}
+
+      {isExpanded && imageUrl ? (
+        <ImageLightbox
+          imageUrl={imageUrl}
+          altText={altText}
+          filename={filename}
+          onClose={() => setIsExpanded(false)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function ImageLightbox({
+  imageUrl,
+  altText,
+  filename,
+  onClose
+}: {
+  imageUrl: string;
+  altText: string;
+  filename: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Large image preview"
+      onClick={onClose}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="relative max-h-[92vh] w-full max-w-5xl rounded-3xl border border-white/20 bg-slate-950 p-4 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 rounded-full bg-white px-3 py-1 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-300"
+          aria-label="Close image preview"
+          autoFocus
+        >
+          Close
+        </button>
+        <img
+          src={imageUrl}
+          alt={altText || 'Generated featured image large preview'}
+          className="max-h-[78vh] w-full rounded-2xl bg-white object-contain"
+        />
+        <div className="mt-3 grid gap-2 text-sm text-white sm:grid-cols-[0.8fr_1.2fr]">
+          <p className="break-all">
+            <span className="font-bold">Filename:</span> {filename || 'Not generated yet'}
+          </p>
+          <p>
+            <span className="font-bold">Alt text:</span> {altText || 'Missing alt text'}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
