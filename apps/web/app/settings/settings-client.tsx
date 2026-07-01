@@ -291,6 +291,7 @@ export function SettingsClient({ initialSettings }: Props) {
               label="Provider"
               value={form.aiProvider}
               onChange={(value) => setForm((current) => ({ ...current, aiProvider: value }))}
+              required
             />
             <Field
               label="OpenAI API key"
@@ -298,6 +299,8 @@ export function SettingsClient({ initialSettings }: Props) {
               value={form.openAiApiKey}
               onChange={(value) => setForm((current) => ({ ...current, openAiApiKey: value }))}
               placeholder={settings.openAiKeyConfigured ? 'Configured' : ''}
+              invalid={!settings.openAiKeyConfigured && !form.openAiApiKey.trim()}
+              warning="OpenAI API key is required before real AI generation."
             />
             <SelectField
               label="Text model"
@@ -339,6 +342,7 @@ export function SettingsClient({ initialSettings }: Props) {
               value={form.wordpressSiteHostname}
               onChange={(value) => setForm((current) => ({ ...current, wordpressSiteHostname: value }))}
               placeholder="example.com"
+              required
             />
             <SelectField
               label="Timezone"
@@ -350,6 +354,7 @@ export function SettingsClient({ initialSettings }: Props) {
               label="Username"
               value={form.wordpressUsername}
               onChange={(value) => setForm((current) => ({ ...current, wordpressUsername: value }))}
+              required
             />
             <Field
               label="Application password"
@@ -359,6 +364,8 @@ export function SettingsClient({ initialSettings }: Props) {
                 setForm((current) => ({ ...current, wordpressApplicationPassword: value }))
               }
               placeholder={settings.wordpressPasswordConfigured ? 'Configured' : ''}
+              invalid={!settings.wordpressPasswordConfigured && !form.wordpressApplicationPassword.trim()}
+              warning="WordPress application password is required before publishing."
             />
             <Field
               label="Plugin token"
@@ -437,7 +444,7 @@ function bytesToHex(bytes: Uint8Array) {
 
 function StatusRow({ label, configured }: { label: string; configured: boolean }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+    <div className={configured ? 'flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2' : 'flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 px-3 py-2'}>
       <span className="font-semibold text-slate-800">{label}</span>
       <span className={configured ? 'font-semibold text-emerald-700' : 'font-semibold text-amber-700'}>
         {configured ? 'Configured' : 'Missing'}
@@ -451,15 +458,23 @@ function Field({
   value,
   onChange,
   type = 'text',
-  placeholder
+  placeholder,
+  required = false,
+  invalid = false,
+  warning
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
+  required?: boolean;
+  invalid?: boolean;
+  warning?: string;
 }) {
   const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const isInvalid = invalid || (required && !value.trim());
+  const warningText = warning ?? (required && !value.trim() ? `${label} is required.` : undefined);
 
   return (
     <div className="space-y-2">
@@ -472,7 +487,10 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        aria-invalid={isInvalid}
+        className={isInvalid ? 'border-red-500 bg-red-50/40 focus:border-red-600 focus:ring-red-200' : undefined}
       />
+      {isInvalid && warningText ? <p className="text-xs font-semibold text-red-700">{warningText}</p> : null}
     </div>
   );
 }

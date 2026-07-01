@@ -32,10 +32,15 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
   const [generated, setGenerated] = useState<GeneratedPackageResponse | null>(null);
   const [message, setMessage] = useState('Ready to generate a package.');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generationAttempted, setGenerationAttempted] = useState(false);
   const trimmedInputLength = inputText.trim().length;
+  const inputTooShort = trimmedInputLength < 20;
+  const showInputWarning = inputTooShort && (generationAttempted || trimmedInputLength > 0);
 
   async function handleGenerate() {
-    if (trimmedInputLength < 20) {
+    setGenerationAttempted(true);
+
+    if (inputTooShort) {
       setMessage(`Add at least ${20 - trimmedInputLength} more character${20 - trimmedInputLength === 1 ? '' : 's'} before generating.`);
       return;
     }
@@ -98,11 +103,19 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
           <Textarea
             id="input-text"
             value={inputText}
-            onChange={(event) => setInputText(event.target.value)}
+            onChange={(event) => {
+              setInputText(event.target.value);
+              if (event.target.value.trim().length >= 20) {
+                setMessage('Ready to generate a package.');
+              }
+            }}
             placeholder="Paste rough notes, source text, or an outline here."
+            aria-invalid={showInputWarning}
+            className={showInputWarning ? 'border-red-500 bg-red-50/40 focus:border-red-600 focus:ring-red-200' : undefined}
           />
-          <p className="text-xs text-slate-500">
+          <p className={showInputWarning ? 'text-xs font-semibold text-red-700' : 'text-xs text-slate-500'}>
             Minimum 20 characters. Current: {trimmedInputLength}.
+            {showInputWarning ? ` Add ${20 - trimmedInputLength} more.` : ''}
           </p>
         </div>
 

@@ -171,22 +171,23 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
       <div className="space-y-4">
-        <EditableField label="Title" value={record.title} onChange={(value) => setRecord((current) => ({ ...current, title: value }))} />
-        <EditableField label="LinkedIn Post" textarea value={record.linkedinPost} onChange={(value) => setRecord((current) => ({ ...current, linkedinPost: value }))} />
-        <EditableField label="Excerpt" textarea value={record.excerpt} onChange={(value) => setRecord((current) => ({ ...current, excerpt: value }))} />
+        <EditableField label="Title" value={record.title} required onChange={(value) => setRecord((current) => ({ ...current, title: value }))} />
+        <EditableField label="LinkedIn Post" textarea value={record.linkedinPost} required onChange={(value) => setRecord((current) => ({ ...current, linkedinPost: value }))} />
+        <EditableField label="Excerpt" textarea value={record.excerpt} required onChange={(value) => setRecord((current) => ({ ...current, excerpt: value }))} />
         <EditableField
           label="Plain CSV Tags"
           value={record.plainCsvTags}
+          required
           onChange={(value) => {
             setRecord((current) => ({ ...current, plainCsvTags: value }));
             setSelectedTagNames(parseTagCsv(value));
           }}
         />
-        <EditableField label="SEO Title" value={record.seoPackage.seoTitle} onChange={(value) => setRecord((current) => ({ ...current, seoPackage: { ...current.seoPackage, seoTitle: value } }))} />
-        <EditableField label="Slug" value={record.seoPackage.slug} onChange={(value) => setRecord((current) => ({ ...current, seoPackage: { ...current.seoPackage, slug: slugify(value) } }))} />
-        <EditableField label="Meta Description" textarea value={record.seoPackage.metaDescription} onChange={(value) => setRecord((current) => ({ ...current, seoPackage: { ...current.seoPackage, metaDescription: value } }))} />
-        <EditableField label="Alt Text" value={record.altText} onChange={(value) => setRecord((current) => ({ ...current, altText: value }))} />
-        <EditableField label="Suggested Image Filename" value={record.suggestedImageFileName} onChange={(value) => setRecord((current) => ({ ...current, suggestedImageFileName: buildImageFileName(value) }))} />
+        <EditableField label="SEO Title" value={record.seoPackage.seoTitle} required onChange={(value) => setRecord((current) => ({ ...current, seoPackage: { ...current.seoPackage, seoTitle: value } }))} />
+        <EditableField label="Slug" value={record.seoPackage.slug} required onChange={(value) => setRecord((current) => ({ ...current, seoPackage: { ...current.seoPackage, slug: slugify(value) } }))} />
+        <EditableField label="Meta Description" textarea value={record.seoPackage.metaDescription} required onChange={(value) => setRecord((current) => ({ ...current, seoPackage: { ...current.seoPackage, metaDescription: value } }))} />
+        <EditableField label="Alt Text" value={record.altText} invalid={Boolean(record.featureImageUrl && !imageValidation.valid)} warning={record.featureImageUrl ? imageValidation.reason : undefined} onChange={(value) => setRecord((current) => ({ ...current, altText: value }))} />
+        <EditableField label="Suggested Image Filename" value={record.suggestedImageFileName} required onChange={(value) => setRecord((current) => ({ ...current, suggestedImageFileName: buildImageFileName(value) }))} />
 
         <TaxonomySelector
           label="Selected categories"
@@ -287,17 +288,28 @@ function EditableField({
   label,
   value,
   onChange,
-  textarea = false
+  textarea = false,
+  required = false,
+  invalid = false,
+  warning
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   textarea?: boolean;
+  required?: boolean;
+  invalid?: boolean;
+  warning?: string;
 }) {
   const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const isInvalid = invalid || (required && !value.trim());
+  const warningText = warning ?? (required && !value.trim() ? `${label} is required.` : undefined);
+  const fieldClassName = isInvalid
+    ? 'border-red-500 bg-red-50/40 focus:border-red-600 focus:ring-red-200'
+    : 'bg-white/95';
 
   return (
-    <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
+    <div className={isInvalid ? 'space-y-2 rounded-2xl border border-red-300 bg-red-50/60 p-4 shadow-sm' : 'space-y-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm'}>
       <div className="flex items-center justify-between gap-3">
         <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
           {label}
@@ -305,10 +317,11 @@ function EditableField({
         <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
       </div>
       {textarea ? (
-        <Textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} className="bg-white/95" />
+        <Textarea id={id} value={value} onChange={(event) => onChange(event.target.value)} className={fieldClassName} aria-invalid={isInvalid} />
       ) : (
-        <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} className="bg-white/95" />
+        <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} className={fieldClassName} aria-invalid={isInvalid} />
       )}
+      {isInvalid && warningText ? <p className="text-xs font-semibold text-red-700">{warningText}</p> : null}
     </div>
   );
 }
@@ -412,13 +425,15 @@ function Field({
 }
 
 function Preview({ label, value, copyable = true }: { label: string; value: string; copyable?: boolean }) {
+  const isWarning = value !== 'None' && ['SEO warnings', 'Alt text validation'].includes(label) && value !== 'Valid';
+
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
+    <div className={isWarning ? 'rounded-2xl border border-red-300 bg-red-50/70 px-4 py-3 shadow-sm' : 'rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm'}>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
+        <p className={isWarning ? 'text-xs font-bold uppercase tracking-wide text-red-800' : 'text-xs font-bold uppercase tracking-wide text-slate-700'}>{label}</p>
         {copyable ? <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" /> : null}
       </div>
-      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{value}</p>
+      <p className={isWarning ? 'mt-1 whitespace-pre-wrap text-sm font-semibold text-red-800' : 'mt-1 whitespace-pre-wrap text-sm text-slate-700'}>{value}</p>
     </div>
   );
 }
