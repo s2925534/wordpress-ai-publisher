@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import {
   generatedPackageResponseSchema,
   type GeneratedPackageResponse
 } from '@/lib/generation-schemas';
+import { formatTagName } from '@/lib/text-utils';
 
 const sourceSafetyOptions = [
   { value: 'my_own_text', label: 'My own text' },
@@ -54,7 +55,7 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
       }
 
       const parsed = generatedPackageResponseSchema.parse(payload.data);
-      setGenerated(parsed);
+      setGenerated(normalizeGeneratedPackage(parsed));
       setMessage('Package generated successfully.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Package generation failed.');
@@ -115,23 +116,17 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
             <Detail label="LinkedIn Post" value={generated.linkedinPost} />
             <Detail label="Excerpt" value={generated.excerpt} />
             <Detail label="Plain CSV Tags" value={generated.plainCsvTags} />
-            <Detail
+            <ChipDetail
               label="Recommended Categories"
-              value={generated.recommendedCategories
-                .map((category) => `${category.name} (${category.confidence})`)
-                .join(', ')}
+              items={dedupeStrings(generated.recommendedCategories.map((category) => category.name))}
             />
             <Detail
               label="Category Reasoning"
               value={generated.recommendedCategories.map((category) => category.reason).join(' ')}
             />
-            <Detail
+            <ChipDetail
               label="Tag Recommendations"
-              value={
-                generated.tagRecommendations
-                  ?.map((tag) => `${tag.name} (${tag.confidence})`)
-                  .join(', ') ?? generated.recommendedTags.join(', ')
-              }
+              items={dedupeStrings((generated.tagRecommendations?.map((tag) => tag.name) ?? generated.recommendedTags).map(formatTagName))}
             />
             <Detail
               label="Duplicate Category Checks"
@@ -173,7 +168,7 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
         <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
@@ -181,4 +176,56 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className="mt-1 whitespace-pre-wrap">{value}</p>
     </div>
   );
+}
+
+function ChipDetail({ label, items }: { label: string; items: string[] }) {
+  const cleanItems = useMemo(() => dedupeStrings(items), [items]);
+  const copyValue = cleanItems.join(', ');
+
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <CopyButton value={copyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {cleanItems.length ? (
+          cleanItems.map((item) => (
+            <span
+              key={item}
+              className="inline-flex items-center rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-medium text-teal-900"
+            >
+              {item}
+            </span>
+          ))
+        ) : (
+          <span className="text-sm text-slate-600">None</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function normalizeGeneratedPackage(packageResult: GeneratedPackageResponse): GeneratedPackageResponse {
+  const recommendedTags = dedupeStrings(packageResult.recommendedTags.map(formatTagName));
+
+  return {
+    ...packageResult,
+    plainCsvTags: recommendedTags.join(', '),
+    recommendedTags,
+    tagRecommendations: packageResult.tagRecommendations?.map((tag) => ({
+      ...tag,
+      name: formatTagName(tag.name)
+    }))
+  };
+}
+
+function dedupeStrings(items: string[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const normalized = item.trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
 }
