@@ -1,4 +1,5 @@
 import { prisma as defaultPrisma } from '@/lib/prisma';
+import { formatTagName, taxonomyIdentityKey } from '@/lib/text-utils';
 import { DiscoveryService } from '@/server/discovery-service';
 import { ConfigService } from '@/server/config-service';
 
@@ -193,8 +194,11 @@ function buildRecommendedTags(input: {
   maxTags: number;
 }) {
   const tokens = tokenize(input.inputText);
+  const preferredTagKeys = input.preferredTags.map((tag) => taxonomyIdentityKey(tag));
   const sourceTags: SiteTerm[] =
-    input.liveTags.length > 0 ? input.liveTags : input.preferredTags.map((name) => ({ name }));
+    input.liveTags.length > 0
+      ? input.liveTags.map((tag) => ({ ...tag, name: formatTagName(tag.name) }))
+      : input.preferredTags.map((name) => ({ name: formatTagName(name) }));
   const scored = sourceTags.map((tag, index) => {
     const normalized = normalize(tag.name);
     const matched = tokens.filter((token) => normalized.includes(token));
@@ -202,7 +206,7 @@ function buildRecommendedTags(input: {
       tag: tag.name,
       score:
         matched.length * 2 +
-        (input.preferredTags.some((candidate) => normalize(candidate) === normalized) ? 1 : 0),
+        (preferredTagKeys.includes(taxonomyIdentityKey(tag.name)) ? 1 : 0),
       id: tag.id,
       matchedCount: matched.length,
       index
@@ -334,7 +338,7 @@ function tokenize(value: string) {
 function dedupeByNormalized<T extends { name: string }>(values: Array<T>) {
   const seen = new Set<string>();
   return values.filter((value) => {
-    const normalized = normalize(value.name);
+    const normalized = taxonomyIdentityKey(value.name);
     if (seen.has(normalized)) {
       return false;
     }

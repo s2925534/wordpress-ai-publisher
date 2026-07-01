@@ -264,4 +264,79 @@ describe('DiscoveryService', () => {
     expect(result.source).toBe('plugin');
     expect(result.snapshot.recentPosts[0]?.slug).toBe('recent-post');
   });
+
+  it('deduplicates categories and formats duplicate tags from discovery', async () => {
+    const configDir = createConfigDir();
+    const mockPrisma = createMockPrisma();
+    const service = new DiscoveryService(configDir, {
+      prisma: mockPrisma as any,
+      fetchFn: async () =>
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              siteInfo: {
+                siteName: 'Veloso',
+                siteUrl: 'https://www.veloso.dev',
+                timezone: 'UTC',
+                locale: 'en-US',
+                restApiAvailable: true
+              },
+              canCreatePosts: true,
+              canPublishPosts: true,
+              canUploadMedia: true,
+              canCreateCategories: true,
+              canCreateTags: true,
+              availablePostTypes: [],
+              availablePostStatuses: [],
+              categories: [
+                {
+                  id: 1,
+                  name: 'Architecture &amp; System Integration',
+                  slug: 'architecture-system-integration',
+                  description: '',
+                  count: 1
+                },
+                {
+                  id: 2,
+                  name: 'Architecture & System Integration',
+                  slug: 'architecture-system-integration-copy',
+                  description: '',
+                  count: 0
+                }
+              ],
+              tags: [
+                { id: 3, name: '#technology strategy', slug: 'technology-strategy', description: '', count: 1 },
+                { id: 4, name: '#TechnologyStrategy', slug: 'technologystrategy', description: '', count: 0 },
+                { id: 5, name: 'AI Engineering', slug: 'ai-engineering', description: '', count: 1 },
+                { id: 6, name: '#AIEngineering', slug: 'aiengineering', description: '', count: 0 },
+                { id: 7, name: '#distributedsystems', slug: 'distributedsystems', description: '', count: 1 }
+              ],
+              authors: [],
+              recentPosts: [],
+              jetpackStatus: {
+                installed: true,
+                active: true,
+                connected: true,
+                socialAvailable: true
+              },
+              seoPluginStatus: {},
+              mediaSettings: { maxUploadSize: 1024, mimeTypes: [] }
+            },
+            error: null
+          }),
+          { status: 200 }
+        ) as Response
+    });
+
+    const result = await service.refresh('default-site');
+
+    expect(result.snapshot.categories).toHaveLength(1);
+    expect(result.snapshot.categories[0]?.name).toBe('Architecture & System Integration');
+    expect(result.snapshot.tags.map((tag) => tag.name)).toEqual([
+      'TechnologyStrategy',
+      'AIEngineering',
+      'DistributedSystems'
+    ]);
+  });
 });

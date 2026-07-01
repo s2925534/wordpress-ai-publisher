@@ -14,8 +14,7 @@ export default async function DashboardPage() {
           <Badge>Dashboard</Badge>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">WordPress AI Publishing Assistant</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            Phase 2 adds the persistence and settings surface needed before WordPress discovery and
-            publishing logic land.
+            Manage local settings, site discovery, generated packages, and publishing readiness.
           </p>
         </header>
 
@@ -38,7 +37,7 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Next workflow</CardTitle>
-              <CardDescription>What this app will support after the remaining phases.</CardDescription>
+              <CardDescription>Core steps for preparing a WordPress publication package.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-slate-700">
               <p>Discover the selected WordPress site.</p>

@@ -216,4 +216,20 @@ describe('RecommendationService', () => {
 
     expect(result.duplicateCategoryCandidates).toContain('Blog');
   });
+
+  it('returns no-space PascalCase tags for generation fallback', async () => {
+    const mockPrisma = createMockPrisma();
+    const configDir = createConfigDir();
+    const service = new RecommendationService(configDir, { prisma: mockPrisma as any });
+
+    const result = await service.recommend({
+      siteKey: 'default-site',
+      inputText: 'Notes about software engineering and workflow automation.',
+      title: 'Software Engineering Workflow'
+    });
+
+    expect(result.recommendedTags).toContain('SoftwareEngineering');
+    expect(result.recommendedTags).toContain('WorkflowAutomation');
+    expect(result.recommendedTags.every((tag) => !tag.includes(' ') && !tag.startsWith('#'))).toBe(true);
+  });
 });

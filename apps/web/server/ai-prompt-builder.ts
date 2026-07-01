@@ -1,5 +1,6 @@
 import type { ContentProfileConfig, SiteConfig } from '@/lib/config-schemas';
 import type { SourceSafetyType } from '@/lib/ai-schemas';
+import { formatTagName } from '@/lib/text-utils';
 
 type BuildPromptInput = {
   inputText: string;
@@ -10,6 +11,7 @@ type BuildPromptInput = {
 
 export function buildDefaultContentProfilePrompt(input: BuildPromptInput) {
   const { contentProfile, siteConfig, inputText, sourceSafetyType } = input;
+  const preferredTags = siteConfig.tags.preferred.map((tag) => formatTagName(tag));
   const safetyGuidance =
     sourceSafetyType === 'third_party_text' || sourceSafetyType === 'unknown'
       ? 'Do not copy or closely paraphrase another author\'s distinctive wording. Use source material for general reference only.'
@@ -22,7 +24,7 @@ export function buildDefaultContentProfilePrompt(input: BuildPromptInput) {
     `Tone to prefer: ${siteConfig.brand.preferredTone.join(', ')}`,
     `Tone to avoid: ${siteConfig.brand.avoidTone.join(', ')}`,
     `Preferred hashtags: ${siteConfig.hashtags.preferred.join(', ') || 'none'}`,
-    `Preferred tags: ${siteConfig.tags.preferred.join(', ') || 'none'}`,
+    `Preferred tags: ${preferredTags.join(', ') || 'none'}`,
     `Category policy: ${siteConfig.categories.mode}`,
     `SEO target title length: ${siteConfig.seo.titleTargetLength.min}-${siteConfig.seo.titleTargetLength.max} characters`,
     `SEO target meta description length: ${siteConfig.seo.metaDescriptionTargetLength.min}-${siteConfig.seo.metaDescriptionTargetLength.max} characters`,

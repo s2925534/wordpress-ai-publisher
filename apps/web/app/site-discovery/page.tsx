@@ -14,7 +14,7 @@ export default async function SiteDiscoveryPage() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <header className="rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-soft backdrop-blur">
-          <Badge>Phase 4 discovery</Badge>
+          <Badge>Site discovery</Badge>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">Site discovery</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
             This page caches the selected WordPress site structure so the app can reuse live

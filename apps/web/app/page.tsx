@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const phaseOneSteps = [
+const includedCapabilities = [
   'Strict TypeScript and app shell',
   'Tailwind and shadcn-style primitives',
   'Prisma and SQLite scaffold',
@@ -17,7 +17,7 @@ export default function HomePage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-8 shadow-soft backdrop-blur">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge>Phase 1 foundation</Badge>
+            <Badge>Publishing assistant</Badge>
             <span className="text-sm text-slate-600">Generic, config-driven, local-first</span>
           </div>
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -63,7 +63,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 text-sm text-slate-700">
-                {phaseOneSteps.map((step) => (
+                {includedCapabilities.map((step) => (
                   <li key={step} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                     {step}
                   </li>

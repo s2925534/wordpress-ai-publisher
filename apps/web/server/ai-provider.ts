@@ -9,6 +9,7 @@ import {
 } from '@/lib/ai-schemas';
 import type { ContentProfileConfig, SiteConfig } from '@/lib/config-schemas';
 import {
+  formatTagName,
   firstSentence,
   slugify,
   summarizeText,
@@ -161,8 +162,12 @@ export class MockAIProvider implements AIProvider {
   }
 
   private buildRecommendedTags(input: PackageGenerationInput) {
-    const preferred = input.siteConfig.tags.preferred.slice(0, input.siteConfig.tags.maxTags);
-    return preferred.length >= input.siteConfig.tags.minTags ? preferred : input.siteConfig.tags.preferred;
+    const preferred = input.siteConfig.tags.preferred
+      .map((tag) => formatTagName(tag))
+      .slice(0, input.siteConfig.tags.maxTags);
+    return preferred.length >= input.siteConfig.tags.minTags
+      ? preferred
+      : input.siteConfig.tags.preferred.map((tag) => formatTagName(tag));
   }
 
   private buildRecommendedCategories(input: PackageGenerationInput) {

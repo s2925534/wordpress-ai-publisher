@@ -5,6 +5,7 @@ import {
   type PluginDiscoveryData
 } from '@/lib/discovery-schemas';
 import { prisma as defaultPrisma } from '@/lib/prisma';
+import { formatTagName, formatTaxonomyName, slugify, taxonomyIdentityKey } from '@/lib/text-utils';
 import { ConfigService } from '@/server/config-service';
 import { decryptSecret } from '@/server/secret-utils';
 
@@ -23,6 +24,8 @@ type DependencySet = {
   prisma: DiscoveryPrismaLike;
   fetchFn: typeof fetch;
 };
+
+type DiscoveredTerm = PluginDiscoveryData['categories'][number];
 
 export type DiscoveryResult = {
   snapshot: DiscoverySnapshot;
@@ -98,7 +101,7 @@ export class DiscoveryService {
         throw new Error(parsedEnvelope.error?.message ?? 'Discovery response was unsuccessful');
       }
 
-      const normalized = this.normalizeSnapshot(parsedEnvelope.data, siteUrl);
+      const normalized = this.normalizeSnapshot(parsedEnvelope.data, siteUrl, siteConfig);
       const snapshot = discoverySnapshotSchema.parse(normalized);
 
       await this.deps.prisma.wordPressSiteSnapshot.create({
@@ -208,7 +211,13 @@ export class DiscoveryService {
     return site.siteUrl?.trim() || fallbackSiteUrl;
   }
 
-  private normalizeSnapshot(data: PluginDiscoveryData, fallbackSiteUrl: string) {
+  private normalizeSnapshot(
+    data: PluginDiscoveryData,
+    fallbackSiteUrl: string,
+    siteConfig: Awaited<ReturnType<ConfigService['loadSiteConfig']>>
+  ) {
+    const categories = this.normalizeCategoryTerms(data.categories);
+
     return {
       siteName: data.siteInfo.siteName,
       siteUrl: data.siteInfo.siteUrl ?? fallbackSiteUrl,
@@ -222,8 +231,12 @@ export class DiscoveryService {
       canCreateTags: data.canCreateTags,
       availablePostTypes: data.availablePostTypes,
       availablePostStatuses: data.availablePostStatuses,
-      categories: data.categories,
-      tags: data.tags,
+      categories,
+      tags: this.normalizeTagTerms(data.tags, [
+        ...siteConfig.tags.preferred,
+        ...siteConfig.hashtags.preferred,
+        ...categories.map((category) => category.name)
+      ]),
       authors: data.authors,
       recentPosts: data.recentPosts.map((post) => {
         const slug = this.resolveRecentPostSlug(post);
@@ -231,7 +244,7 @@ export class DiscoveryService {
         return {
           ...post,
           slug,
-          url: post.url ?? new URL(`/${slug}`, fallbackSiteUrl).toString()
+          url: post.url?.trim() ? post.url : new URL(`/${slug}`, fallbackSiteUrl).toString()
         };
       }),
       jetpackStatus: data.jetpackStatus,
@@ -274,6 +287,35 @@ export class DiscoveryService {
     });
   }
 
+  private normalizeCategoryTerms(terms: DiscoveredTerm[]) {
+    return dedupeTerms(
+      terms.map((term) => ({
+        ...term,
+        name: formatTaxonomyName(term.name)
+      })),
+      (term) => taxonomyIdentityKey(term.name)
+    );
+  }
+
+  private normalizeTagTerms(terms: DiscoveredTerm[], aliases: string[]) {
+    const aliasByKey = new Map(
+      aliases.map((alias) => [taxonomyIdentityKey(alias), formatTagName(alias)])
+    );
+
+    return dedupeTerms(
+      terms.map((term) => {
+        const name = aliasByKey.get(taxonomyIdentityKey(term.name)) ?? formatTagName(term.name);
+
+        return {
+          ...term,
+          name,
+          slug: term.slug?.trim() || slugify(name)
+        };
+      }),
+      (term) => taxonomyIdentityKey(term.name)
+    );
+  }
+
   private resolveRecentPostSlug(post: {
     slug?: string | null;
     title: string;
@@ -304,4 +346,30 @@ export class DiscoveryService {
 
     return titleSlug || `post-${post.id}`;
   }
+}
+
+function dedupeTerms<T extends { count?: number; name: string }>(
+  terms: T[],
+  getKey: (term: T) => string
+) {
+  const byKey = new Map<string, T>();
+
+  for (const term of terms) {
+    const key = getKey(term);
+    const existing = byKey.get(key);
+
+    if (!existing || scoreTermVariant(term) > scoreTermVariant(existing)) {
+      byKey.set(key, term);
+    }
+  }
+
+  return Array.from(byKey.values());
+}
+
+function scoreTermVariant(term: { count?: number; name: string }) {
+  return (
+    (term.count ?? 0) * 10 +
+    (/[A-Z]/.test(term.name) ? 2 : 0) +
+    (/\s/.test(term.name) ? 1 : 0)
+  );
 }
