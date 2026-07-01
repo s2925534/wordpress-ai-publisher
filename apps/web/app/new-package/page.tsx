@@ -1,10 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NewPackageClient } from '@/app/new-package/package-client';
+import { SettingsService } from '@/server/settings-service';
 
-export default function NewPackagePage() {
+export default async function NewPackagePage() {
   const defaultSiteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site';
   const defaultContentProfileKey = process.env.DEFAULT_CONTENT_PROFILE_KEY ?? 'linkedin-blog-package';
+  const settings = await new SettingsService(process.env.CONFIG_DIR ?? './config').getSettings(defaultSiteKey);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
@@ -27,7 +29,12 @@ export default function NewPackagePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <NewPackageClient defaultSiteKey={defaultSiteKey} defaultContentProfileKey={defaultContentProfileKey} />
+            <NewPackageClient
+              defaultSiteKey={defaultSiteKey}
+              defaultContentProfileKey={defaultContentProfileKey}
+              initialAiSafeguards={settings.aiSafeguards}
+              initialSelectedAiSafeguardId={settings.selectedAiSafeguardId}
+            />
           </CardContent>
         </Card>
       </div>

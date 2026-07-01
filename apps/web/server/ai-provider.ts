@@ -8,6 +8,7 @@ import {
   type SourceSafetyType
 } from '@/lib/ai-schemas';
 import type { ContentProfileConfig, SiteConfig } from '@/lib/config-schemas';
+import type { AiSafeguard } from '@/lib/ai-safeguards';
 import {
   formatTagName,
   firstSentence,
@@ -22,6 +23,7 @@ export type PackageGenerationInput = {
   sourceSafetyType: SourceSafetyType;
   siteConfig: SiteConfig;
   contentProfile: ContentProfileConfig;
+  aiSafeguard?: AiSafeguard;
 };
 
 export type SeoGenerationInput = PackageGenerationInput & {
@@ -167,6 +169,11 @@ export class MockAIProvider implements AIProvider {
   }
 
   private buildTitle(inputText: string) {
+    const task = parseTaskInstruction(inputText);
+    if (task) {
+      return titleCase(task.topic.replace(/[.!?]+$/g, ''));
+    }
+
     const summary = summarizeText(firstSentence(inputText) || inputText, 10);
     return titleCase(summary.replace(/[.!?]+$/g, ''));
   }
@@ -174,6 +181,16 @@ export class MockAIProvider implements AIProvider {
   private buildLinkedInPost(input: PackageGenerationInput) {
     const title = this.buildTitle(input.inputText);
     const hashtags = input.siteConfig.hashtags.preferred.slice(0, 3).join(' ');
+    const task = parseTaskInstruction(input.inputText);
+
+    if (task?.kind === 'joke') {
+      return [
+        `A kangaroo walks into a stand-up meeting and says, "I can jump over blockers, but even I cannot clear the backlog before Friday."`,
+        `The emu nods and replies, "That is why we call it agile, mate. Nobody said it was graceful."`,
+        hashtags
+      ].filter(Boolean).join('\n\n');
+    }
+
     return [
       `${title} is a practical example of turning rough notes into a publication-ready package.`,
       `The important part is keeping the content original, clear, and structured for review.`,
@@ -183,6 +200,11 @@ export class MockAIProvider implements AIProvider {
   }
 
   private buildExcerpt(input: PackageGenerationInput) {
+    const task = parseTaskInstruction(input.inputText);
+    if (task?.kind === 'joke') {
+      return `A light, workplace-friendly joke about ${task.topic.toLowerCase()}.`;
+    }
+
     const summary = summarizeText(input.inputText, 28);
     return summary.endsWith('.') ? summary : `${summary}.`;
   }
@@ -336,4 +358,16 @@ function escapeSvgText(value: string) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function parseTaskInstruction(inputText: string) {
+  const text = inputText.trim();
+  const match = text.match(/^(?:please\s+)?(?:write|create|draft|generate|make)\s+(?:me\s+)?(?:a|an|the)?\s*(joke|post|article|blog post|summary|title)\s+(?:about|on|for)\s+(.+?)[.!?]*$/i);
+  if (!match) {
+    return null;
+  }
+
+  const kind = match[1].toLowerCase().replace(/\s+/g, '-');
+  const topic = match[2].trim();
+  return { kind, topic };
 }

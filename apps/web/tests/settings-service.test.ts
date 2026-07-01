@@ -53,4 +53,39 @@ describe('SettingsService', () => {
     expect(result.pluginTokenConfigured).toBe(true);
     expect(result.wordpressPluginToken).toBe('plugin-token');
   });
+
+  it('stores custom AI safeguards without overwriting site settings', async () => {
+    const prisma = createMockPrisma();
+    const service = new SettingsService('./config', { prisma: prisma as any });
+
+    await service.updateSettings({
+      wordpressSiteUrl: 'https://veloso.dev',
+      wordpressUsername: 'pedro'
+    });
+
+    const result = await service.updateSettings({
+      aiSafeguards: [
+        {
+          id: 'default-original-task-aware',
+          name: 'Default task-aware generation',
+          readonly: true,
+          guidelines:
+            'Treat user input as instructions when it is phrased as a task and produce the requested content.'
+        },
+        {
+          id: 'custom-jokes',
+          name: 'Jokes',
+          readonly: false,
+          guidelines:
+            'When asked for a joke, generate the joke itself rather than summarizing the request.'
+        }
+      ],
+      selectedAiSafeguardId: 'custom-jokes'
+    });
+
+    expect(result.wordpressUsername).toBe('pedro');
+    expect(result.wordpressSiteUrl).toBe('https://veloso.dev');
+    expect(result.selectedAiSafeguardId).toBe('custom-jokes');
+    expect(result.aiSafeguards.some((item) => item.id === 'custom-jokes')).toBe(true);
+  });
 });

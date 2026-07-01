@@ -14,6 +14,7 @@ export async function POST(request: Request) {
       sourceSafetyType?: 'my_own_text' | 'public_reference' | 'third_party_text' | 'notes_only' | 'unknown';
       siteKey?: string;
       contentProfileKey?: string;
+      aiSafeguard?: unknown;
     };
 
     if (!body.inputText || !body.sourceSafetyType) {
@@ -34,7 +35,8 @@ export async function POST(request: Request) {
       inputText: body.inputText,
       sourceSafetyType: body.sourceSafetyType,
       siteKey: body.siteKey,
-      contentProfileKey: body.contentProfileKey
+      contentProfileKey: body.contentProfileKey,
+      aiSafeguard: body.aiSafeguard as never
     });
 
     return NextResponse.json({

@@ -45,6 +45,7 @@ export class PackageService {
     sourceSafetyType: SourceSafetyType;
     siteKey?: string;
     contentProfileKey?: string;
+    aiSafeguard?: Parameters<AIProvider['generatePublicationPackage']>[0]['aiSafeguard'];
   }) {
     const siteConfig = await this.loadSiteConfig(input.siteKey);
     const contentProfile = await this.loadContentProfile(input.contentProfileKey);
@@ -53,7 +54,8 @@ export class PackageService {
       inputText: input.inputText,
       sourceSafetyType: input.sourceSafetyType,
       siteConfig,
-      contentProfile
+      contentProfile,
+      aiSafeguard: input.aiSafeguard
     });
 
     const recommendations = await this.recommendationService.recommend({

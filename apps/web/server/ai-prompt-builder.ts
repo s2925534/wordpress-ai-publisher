@@ -1,5 +1,6 @@
 import type { ContentProfileConfig, SiteConfig } from '@/lib/config-schemas';
 import type { SourceSafetyType } from '@/lib/ai-schemas';
+import type { AiSafeguard } from '@/lib/ai-safeguards';
 import { formatTagName } from '@/lib/text-utils';
 
 type BuildPromptInput = {
@@ -7,6 +8,7 @@ type BuildPromptInput = {
   sourceSafetyType: SourceSafetyType;
   siteConfig: SiteConfig;
   contentProfile: ContentProfileConfig;
+  aiSafeguard?: AiSafeguard;
 };
 
 export function buildDefaultContentProfilePrompt(input: BuildPromptInput) {
@@ -32,8 +34,11 @@ export function buildDefaultContentProfilePrompt(input: BuildPromptInput) {
     `Image avoid: ${siteConfig.image.avoid.join(', ')}`,
     `Source safety: ${sourceSafetyType}`,
     safetyGuidance,
+    input.aiSafeguard
+      ? `AI safeguards profile: ${input.aiSafeguard.name}\n${input.aiSafeguard.guidelines}`
+      : '',
     `Source text: ${inputText}`,
     `Output order: ${contentProfile.outputOrder.join(' > ')}`,
     'Return original, publication-ready content that is practical, credible, and suitable for WordPress and LinkedIn.'
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }

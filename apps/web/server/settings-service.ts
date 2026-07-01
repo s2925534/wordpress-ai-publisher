@@ -6,6 +6,12 @@ import {
   DEFAULT_OPENAI_TEXT_MODEL
 } from '@/lib/ai-defaults';
 import { settingsUpdateSchema, type SettingsUpdate } from '@/lib/settings-schemas';
+import {
+  defaultAiSafeguard,
+  normalizeAiSafeguards,
+  resolveSelectedSafeguard,
+  type AiSafeguard
+} from '@/lib/ai-safeguards';
 import { buildSettingsCompletionStatus } from '@/lib/settings-summary';
 import { ConfigService } from '@/server/config-service';
 import { decryptSecret, encryptSecret, hasStoredSecret } from '@/server/secret-utils';
@@ -16,6 +22,8 @@ const AI_PROVIDER_KEY = 'ai.provider';
 const OPENAI_API_KEY = 'ai.openai_api_key';
 const OPENAI_TEXT_MODEL_KEY = 'ai.openai_text_model';
 const OPENAI_IMAGE_MODEL_KEY = 'ai.openai_image_model';
+const AI_SAFEGUARDS_KEY = 'ai.safeguards';
+const SELECTED_AI_SAFEGUARD_KEY = 'ai.selected_safeguard_id';
 
 function splitSiteUrl(siteUrl: string) {
   try {
@@ -72,6 +80,13 @@ export class SettingsService {
     const openAiApiKey = await this.getSetting(OPENAI_API_KEY);
     const openAiTextModel = await this.getSetting(OPENAI_TEXT_MODEL_KEY);
     const openAiImageModel = await this.getSetting(OPENAI_IMAGE_MODEL_KEY);
+    const aiSafeguards = normalizeAiSafeguards(this.parseJsonSetting<AiSafeguard[]>(await this.getSetting(AI_SAFEGUARDS_KEY)) ?? [
+      defaultAiSafeguard
+    ]);
+    const selectedAiSafeguard = resolveSelectedSafeguard(
+      aiSafeguards,
+      await this.getSetting(SELECTED_AI_SAFEGUARD_KEY)
+    );
 
     const values = {
       appUrl: process.env.APP_URL ?? 'http://localhost:3000',
@@ -89,7 +104,9 @@ export class SettingsService {
       wordpressUsername: site.username ?? '',
       wordpressPasswordConfigured: hasStoredSecret(site.encryptedApplicationPassword),
       pluginTokenConfigured: hasStoredSecret(site.encryptedPluginToken),
-      wordpressPluginToken: decryptSecret(site.encryptedPluginToken)
+      wordpressPluginToken: decryptSecret(site.encryptedPluginToken),
+      aiSafeguards,
+      selectedAiSafeguardId: selectedAiSafeguard.id
     };
 
     return {
@@ -112,54 +129,82 @@ export class SettingsService {
   async updateSettings(input: SettingsUpdate, siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site') {
     const parsed = settingsUpdateSchema.parse(input);
     const siteConfig = await this.configService.loadSiteConfig(siteKey);
-    const fallbackSiteUrl = parsed.wordpressSiteUrl?.trim() || siteConfig.siteUrl;
-    const siteUrl = buildSiteUrl(parsed.wordpressSiteProtocol, parsed.wordpressSiteHostname, fallbackSiteUrl);
-    const siteParts = splitSiteUrl(siteUrl);
 
     await this.setSetting(AI_PROVIDER_KEY, parsed.aiProvider);
     await this.setSecretSetting(OPENAI_API_KEY, parsed.openAiApiKey);
     await this.setSetting(OPENAI_TEXT_MODEL_KEY, parsed.openAiTextModel);
     await this.setSetting(OPENAI_IMAGE_MODEL_KEY, parsed.openAiImageModel);
+    await this.setJsonSetting(
+      AI_SAFEGUARDS_KEY,
+      parsed.aiSafeguards ? normalizeAiSafeguards(parsed.aiSafeguards) : undefined
+    );
+    await this.setSetting(SELECTED_AI_SAFEGUARD_KEY, parsed.selectedAiSafeguardId);
 
-    const siteUpdate: {
-      name: string;
-      siteUrl: string;
-      siteProtocol: 'http' | 'https';
-      siteHostname: string;
-      timezone: string | null;
-      defaultStatus: 'draft' | 'publish' | 'future' | 'pending' | 'private';
-      username?: string;
-      encryptedApplicationPassword?: string;
-      encryptedPluginToken?: string;
-    } = {
-      name: siteConfig.siteName,
-      siteUrl,
-      siteProtocol: siteParts.siteProtocol,
-      siteHostname: parsed.wordpressSiteHostname?.trim() || siteParts.siteHostname,
-      timezone: parsed.wordpressTimezone?.trim() || null,
-      defaultStatus: siteConfig.wordpress.defaultStatus
-    };
+    const hasSiteUpdate =
+      parsed.wordpressSiteProtocol !== undefined ||
+      parsed.wordpressSiteHostname !== undefined ||
+      parsed.wordpressSiteUrl !== undefined ||
+      parsed.wordpressTimezone !== undefined ||
+      parsed.wordpressUsername !== undefined ||
+      parsed.wordpressApplicationPassword !== undefined ||
+      parsed.wordpressPluginToken !== undefined;
 
-    if (parsed.wordpressUsername?.trim()) {
-      siteUpdate.username = parsed.wordpressUsername.trim();
+    if (hasSiteUpdate) {
+      const currentSite = await this.prisma.wordPressSite.findUnique({ where: { siteKey } });
+      const fallbackSiteUrl = parsed.wordpressSiteUrl?.trim() || currentSite?.siteUrl || siteConfig.siteUrl;
+      const siteUrl = buildSiteUrl(
+        parsed.wordpressSiteProtocol ?? currentSite?.siteProtocol ?? undefined,
+        parsed.wordpressSiteHostname ?? currentSite?.siteHostname ?? undefined,
+        fallbackSiteUrl
+      );
+      const siteParts = splitSiteUrl(siteUrl);
+
+      const siteUpdate: {
+        name: string;
+        siteUrl: string;
+        siteProtocol: 'http' | 'https';
+        siteHostname: string;
+        timezone: string | null;
+        defaultStatus: 'draft' | 'publish' | 'future' | 'pending' | 'private';
+        username?: string;
+        encryptedApplicationPassword?: string;
+        encryptedPluginToken?: string;
+      } = {
+        name: siteConfig.siteName,
+        siteUrl,
+        siteProtocol: siteParts.siteProtocol,
+        siteHostname: parsed.wordpressSiteHostname?.trim() || currentSite?.siteHostname || siteParts.siteHostname,
+        timezone: parsed.wordpressTimezone?.trim() || currentSite?.timezone || null,
+        defaultStatus: siteConfig.wordpress.defaultStatus
+      };
+
+      if (parsed.wordpressUsername?.trim()) {
+        siteUpdate.username = parsed.wordpressUsername.trim();
+      } else if (currentSite?.username) {
+        siteUpdate.username = currentSite.username;
+      }
+
+      if (parsed.wordpressApplicationPassword?.trim()) {
+        siteUpdate.encryptedApplicationPassword = encryptSecret(parsed.wordpressApplicationPassword.trim());
+      } else if (currentSite?.encryptedApplicationPassword) {
+        siteUpdate.encryptedApplicationPassword = currentSite.encryptedApplicationPassword;
+      }
+
+      if (parsed.wordpressPluginToken?.trim()) {
+        siteUpdate.encryptedPluginToken = encryptSecret(parsed.wordpressPluginToken.trim());
+      } else if (currentSite?.encryptedPluginToken) {
+        siteUpdate.encryptedPluginToken = currentSite.encryptedPluginToken;
+      }
+
+      await this.prisma.wordPressSite.upsert({
+        where: { siteKey },
+        create: {
+          siteKey,
+          ...siteUpdate
+        },
+        update: siteUpdate
+      });
     }
-
-    if (parsed.wordpressApplicationPassword?.trim()) {
-      siteUpdate.encryptedApplicationPassword = encryptSecret(parsed.wordpressApplicationPassword.trim());
-    }
-
-    if (parsed.wordpressPluginToken?.trim()) {
-      siteUpdate.encryptedPluginToken = encryptSecret(parsed.wordpressPluginToken.trim());
-    }
-
-    await this.prisma.wordPressSite.upsert({
-      where: { siteKey },
-      create: {
-        siteKey,
-        ...siteUpdate
-      },
-      update: siteUpdate
-    });
 
     return this.getSettings(siteKey);
   }
@@ -189,6 +234,26 @@ export class SettingsService {
     }
 
     await this.setSetting(key, encryptSecret(trimmed));
+  }
+
+  private parseJsonSetting<T>(value: string) {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  private async setJsonSetting(key: string, value?: unknown) {
+    if (value === undefined) {
+      return;
+    }
+
+    await this.setSetting(key, JSON.stringify(value));
   }
 }
 

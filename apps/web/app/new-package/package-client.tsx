@@ -5,8 +5,10 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AiSafeguardsEditor } from '@/components/ai-safeguards-editor';
 import { CopyButton } from '@/components/copy-button';
 import { Textarea } from '@/components/ui/textarea';
+import { defaultAiSafeguard, normalizeAiSafeguards, resolveSelectedSafeguard, type AiSafeguard } from '@/lib/ai-safeguards';
 import {
   generatedPackageResponseSchema,
   type GeneratedPackageResponse
@@ -24,18 +26,54 @@ const sourceSafetyOptions = [
 type Props = {
   defaultSiteKey: string;
   defaultContentProfileKey: string;
+  initialAiSafeguards: AiSafeguard[];
+  initialSelectedAiSafeguardId: string;
 };
 
-export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: Props) {
+export function NewPackageClient({
+  defaultSiteKey,
+  defaultContentProfileKey,
+  initialAiSafeguards,
+  initialSelectedAiSafeguardId
+}: Props) {
   const [inputText, setInputText] = useState('');
   const [sourceSafetyType, setSourceSafetyType] = useState<(typeof sourceSafetyOptions)[number]['value']>('notes_only');
   const [generated, setGenerated] = useState<GeneratedPackageResponse | null>(null);
   const [message, setMessage] = useState('Ready to generate a package.');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generationAttempted, setGenerationAttempted] = useState(false);
+  const [isSafeguardsOpen, setIsSafeguardsOpen] = useState(false);
+  const [aiSafeguards, setAiSafeguards] = useState(() => normalizeAiSafeguards(initialAiSafeguards));
+  const [selectedAiSafeguardId, setSelectedAiSafeguardId] = useState(
+    initialSelectedAiSafeguardId || defaultAiSafeguard.id
+  );
   const trimmedInputLength = inputText.trim().length;
   const inputTooShort = trimmedInputLength < 20;
   const showInputWarning = inputTooShort && (generationAttempted || trimmedInputLength > 0);
+  const selectedAiSafeguard = resolveSelectedSafeguard(aiSafeguards, selectedAiSafeguardId);
+
+  async function saveSafeguards(nextSafeguards = aiSafeguards, nextSelectedId = selectedAiSafeguardId) {
+    setAiSafeguards(normalizeAiSafeguards(nextSafeguards));
+    setSelectedAiSafeguardId(nextSelectedId);
+
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aiSafeguards: normalizeAiSafeguards(nextSafeguards),
+          selectedAiSafeguardId: nextSelectedId
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error?.message ?? 'Unable to save AI safeguards.');
+      }
+      setMessage('AI safeguards saved.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to save AI safeguards.');
+    }
+  }
 
   async function handleGenerate() {
     setGenerationAttempted(true);
@@ -56,7 +94,8 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
           inputText,
           sourceSafetyType,
           siteKey: defaultSiteKey,
-          contentProfileKey: defaultContentProfileKey
+          contentProfileKey: defaultContentProfileKey,
+          aiSafeguard: selectedAiSafeguard
         })
       });
       const payload = (await response.json()) as { success: boolean; data?: unknown; error?: { message?: string } };
@@ -119,12 +158,76 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
           </p>
         </div>
 
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-bold text-slate-900">AI safeguard</p>
+              <p className="mt-1 text-slate-600">{selectedAiSafeguard.name}</p>
+            </div>
+            <Button variant="secondary" onClick={() => setIsSafeguardsOpen(true)}>
+              Edit safeguards
+            </Button>
+          </div>
+        </div>
+
         <Button onClick={handleGenerate} disabled={isSubmitting}>
           {isSubmitting ? 'Generating...' : 'Generate package'}
         </Button>
 
         <p className="text-sm text-slate-600">{message}</p>
       </div>
+
+      {isSafeguardsOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="AI safeguards"
+          onClick={() => setIsSafeguardsOpen(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-slate-950">AI safeguards</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  These are the same safeguards available in Settings and are used during generation.
+                </p>
+              </div>
+              <Button variant="ghost" onClick={() => setIsSafeguardsOpen(false)}>
+                Close
+              </Button>
+            </div>
+
+            <div className="mt-5">
+              <AiSafeguardsEditor
+                safeguards={aiSafeguards}
+                selectedId={selectedAiSafeguard.id}
+                onChange={(next) => {
+                  setAiSafeguards(next.safeguards);
+                  setSelectedAiSafeguardId(next.selectedId);
+                }}
+              />
+            </div>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-3">
+              <Button variant="secondary" onClick={() => setIsSafeguardsOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  void saveSafeguards(aiSafeguards, selectedAiSafeguardId);
+                  setIsSafeguardsOpen(false);
+                }}
+              >
+                Save safeguards
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
         <div className="flex items-center justify-between gap-3">

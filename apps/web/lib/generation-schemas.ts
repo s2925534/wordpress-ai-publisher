@@ -1,12 +1,14 @@
 import { z } from 'zod';
 
 import { sourceSafetySchema } from '@/lib/ai-schemas';
+import { aiSafeguardSchema } from '@/lib/ai-safeguards';
 
 export const generationRequestSchema = z.object({
   inputText: z.string().trim().min(20).max(8000),
   sourceSafetyType: sourceSafetySchema,
   siteKey: z.string().min(1).optional(),
-  contentProfileKey: z.string().min(1).optional()
+  contentProfileKey: z.string().min(1).optional(),
+  aiSafeguard: aiSafeguardSchema.optional()
 });
 
 export const generatedPackageResponseSchema = z.object({

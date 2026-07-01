@@ -35,6 +35,20 @@ describe('AI provider foundation', () => {
     expect(packageResult.seoPackage.metaDescription).not.toContain('A professional WordPress publishing site');
   });
 
+  it('treats task-style prompts as instructions rather than literal source text', async () => {
+    const provider = new MockAIProvider();
+    const packageResult = await provider.generatePublicationPackage({
+      inputText: 'Write a joke about Australia.',
+      sourceSafetyType: 'notes_only',
+      siteConfig: createDefaultSiteConfig('https://example.com'),
+      contentProfile: createDefaultContentProfile()
+    });
+
+    expect(packageResult.title).toBe('Australia');
+    expect(packageResult.excerpt).toContain('joke about australia');
+    expect(packageResult.linkedinPost).not.toContain('Write a joke about Australia');
+  });
+
   it('returns a displayable mock image preview', async () => {
     const provider = new MockAIProvider();
     const image = await provider.generateImage({

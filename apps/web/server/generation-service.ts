@@ -4,12 +4,14 @@ import { ConfigService } from '@/server/config-service';
 import { createDefaultContentProfile, createDefaultSiteConfig } from '@/server/default-config';
 import { RecommendationService } from '@/server/recommendation-service';
 import type { SourceSafetyType } from '@/lib/ai-schemas';
+import type { AiSafeguard } from '@/lib/ai-safeguards';
 
 type GeneratePackageInput = {
   inputText: string;
   sourceSafetyType: SourceSafetyType;
   siteKey?: string;
   contentProfileKey?: string;
+  aiSafeguard?: AiSafeguard;
 };
 
 export class GenerationService {
@@ -32,7 +34,8 @@ export class GenerationService {
       inputText: parsed.inputText,
       sourceSafetyType: parsed.sourceSafetyType,
       siteConfig,
-      contentProfile
+      contentProfile,
+      aiSafeguard: parsed.aiSafeguard
     });
 
     const recommendations = await this.recommendationService.recommend({

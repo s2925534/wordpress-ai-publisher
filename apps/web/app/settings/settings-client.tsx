@@ -9,6 +9,8 @@ import {
   IMAGE_MODEL_OPTIONS,
   TEXT_MODEL_OPTIONS
 } from '@/lib/ai-defaults';
+import { AiSafeguardsEditor } from '@/components/ai-safeguards-editor';
+import { defaultAiSafeguard, normalizeAiSafeguards, type AiSafeguard } from '@/lib/ai-safeguards';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +34,8 @@ type SettingsPayload = {
   wordpressPasswordConfigured: boolean;
   pluginTokenConfigured: boolean;
   wordpressPluginToken: string;
+  aiSafeguards: AiSafeguard[];
+  selectedAiSafeguardId: string;
   completion: {
     configured: boolean;
     missing: string[];
@@ -50,6 +54,8 @@ type SettingsForm = {
   wordpressUsername: string;
   wordpressApplicationPassword: string;
   wordpressPluginToken: string;
+  aiSafeguards: AiSafeguard[];
+  selectedAiSafeguardId: string;
 };
 
 type Props = {
@@ -69,7 +75,9 @@ export function SettingsClient({ initialSettings }: Props) {
     wordpressSiteUrl: initialSettings.wordpressSiteUrl,
     wordpressUsername: initialSettings.wordpressUsername,
     wordpressApplicationPassword: '',
-    wordpressPluginToken: initialSettings.wordpressPluginToken || ''
+    wordpressPluginToken: initialSettings.wordpressPluginToken || '',
+    aiSafeguards: normalizeAiSafeguards(initialSettings.aiSafeguards),
+    selectedAiSafeguardId: initialSettings.selectedAiSafeguardId || defaultAiSafeguard.id
   });
   const [message, setMessage] = useState('Settings loaded.');
   const [isSaving, setIsSaving] = useState(false);
@@ -87,7 +95,9 @@ export function SettingsClient({ initialSettings }: Props) {
       if (saved) {
         setForm((current) => ({
           ...current,
-          ...saved
+          ...saved,
+          aiSafeguards: normalizeAiSafeguards(saved.aiSafeguards ?? current.aiSafeguards),
+          selectedAiSafeguardId: saved.selectedAiSafeguardId ?? current.selectedAiSafeguardId
         }));
         setMessage('Loaded browser draft configuration.');
       }
@@ -313,6 +323,29 @@ export function SettingsClient({ initialSettings }: Props) {
               value={form.openAiImageModel}
               onChange={(value) => setForm((current) => ({ ...current, openAiImageModel: value }))}
               options={IMAGE_MODEL_OPTIONS}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Safeguards</CardTitle>
+            <CardDescription>
+              Configure how prompts should be interpreted during generation. The selected safeguard
+              is shared with the New Package popup.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AiSafeguardsEditor
+              safeguards={form.aiSafeguards}
+              selectedId={form.selectedAiSafeguardId}
+              onChange={(next) =>
+                setForm((current) => ({
+                  ...current,
+                  aiSafeguards: next.safeguards,
+                  selectedAiSafeguardId: next.selectedId
+                }))
+              }
             />
           </CardContent>
         </Card>

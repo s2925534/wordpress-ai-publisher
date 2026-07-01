@@ -23,6 +23,7 @@ MIT License. Provided free of charge, without warranty.
 - Retrieves and displays categories, tags, authors, recent posts, media settings, and Jetpack status where available.
 - Generates a WordPress + LinkedIn publication package from rough notes.
 - Generates SEO fields, category/tag recommendations, image prompts, image filename, and mandatory alt text.
+- Supports AI safeguard profiles that guide how prompts are interpreted during generation.
 - Shows generated content in clearly highlighted review cards.
 - Supports multi-select category/tag chips with removable selections.
 - Previews generated images, supports `Try another image`, and opens a large overlay preview when the image is clicked.
@@ -139,15 +140,24 @@ Reinstall the plugin only when plugin files change. Pure app UI changes do not r
 1. Go to `New Package`.
 2. Paste at least 20 characters of rough notes or source material.
 3. Choose the source safety type.
-4. Click `Generate package`.
-5. Review the generated package preview.
-6. Open final confirmation.
-7. Edit title, LinkedIn post, excerpt, tags, SEO fields, alt text, and filename.
-8. Prepare a featured image.
-9. Click the image to inspect it in a larger overlay.
-10. Use `Try another image` if the image is not suitable.
-11. Confirm the final action.
-12. Create a WordPress draft by default, or explicitly choose publish/schedule.
+4. Review or edit the selected AI safeguard if needed.
+5. Click `Generate package`.
+6. Review the generated package preview.
+7. Open final confirmation.
+8. Edit title, LinkedIn post, excerpt, tags, SEO fields, alt text, and filename.
+9. Prepare a featured image.
+10. Click the image to inspect it in a larger overlay.
+11. Use `Try another image` if the image is not suitable.
+12. Confirm the final action.
+13. Create a WordPress draft by default, or explicitly choose publish/schedule.
+
+## AI Safeguards
+
+AI safeguards are reusable generation rules. They are available in Settings and as a popup on the New Package screen. Both locations edit the same saved configuration.
+
+The built-in default safeguard is readonly. It tells the generator to treat task-style prompts as instructions. For example, `Write a joke about Australia` should generate the joke package, not produce a title or excerpt about the literal sentence.
+
+Create custom safeguards for different post types, such as jokes, technical posts, announcements, or long-form articles. Custom safeguards are saved with the browser configuration JSON and persisted through the local settings API.
 
 ## Validation And Warnings
 
