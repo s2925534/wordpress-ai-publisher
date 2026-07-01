@@ -68,7 +68,7 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700" htmlFor="source-safety">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="source-safety">
             Source safety
           </label>
           <select
@@ -86,7 +86,7 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700" htmlFor="input-text">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="input-text">
             Rough text or notes
           </label>
           <Textarea
@@ -107,7 +107,7 @@ export function NewPackageClient({ defaultSiteKey, defaultContentProfileKey }: P
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
         <div className="flex items-center justify-between gap-3">
           <Badge>Package preview</Badge>
-          <span className="text-xs uppercase tracking-wide text-slate-500">Validated output</span>
+          <span className="text-xs font-bold uppercase tracking-wide text-slate-600">Validated output</span>
         </div>
 
         {generated ? (
@@ -170,7 +170,7 @@ function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
       </div>
       <p className="mt-1 whitespace-pre-wrap">{value}</p>
@@ -185,7 +185,7 @@ function ChipDetail({ label, items }: { label: string; items: string[] }) {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={copyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />
       </div>
       <div className="mt-2 flex flex-wrap gap-2">

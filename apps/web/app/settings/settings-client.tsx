@@ -190,7 +190,7 @@ export function SettingsClient({ initialSettings }: Props) {
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <Badge>{settings.completion.configured ? 'Configured' : 'Incomplete'}</Badge>
-            <span className="text-xs uppercase tracking-wide text-slate-500">{settings.defaultSiteKey}</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-slate-600">{settings.defaultSiteKey}</span>
           </div>
           <CardTitle>Setup status</CardTitle>
           <CardDescription>
@@ -207,7 +207,7 @@ export function SettingsClient({ initialSettings }: Props) {
             configured={settings.wordpressSiteConfigured}
           />
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Site URL preview</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-700">Site URL preview</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <p className="break-all text-sm font-medium text-teal-700">
                 {form.wordpressSiteUrl || 'Not set'}
@@ -270,7 +270,7 @@ export function SettingsClient({ initialSettings }: Props) {
               Download plugin zip
             </a>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-              <p className="font-medium text-slate-900">Install checklist</p>
+              <p className="font-bold text-slate-900">Install checklist</p>
               <ol className="mt-2 list-decimal space-y-1 pl-5">
                 <li>Download the zip from this app.</li>
                 <li>Upload it in WordPress under Plugins.</li>
@@ -438,8 +438,8 @@ function bytesToHex(bytes: Uint8Array) {
 function StatusRow({ label, configured }: { label: string; configured: boolean }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <span>{label}</span>
-      <span className={configured ? 'text-emerald-700' : 'text-amber-700'}>
+      <span className="font-semibold text-slate-800">{label}</span>
+      <span className={configured ? 'font-semibold text-emerald-700' : 'font-semibold text-amber-700'}>
         {configured ? 'Configured' : 'Missing'}
       </span>
     </div>
@@ -463,7 +463,7 @@ function Field({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+      <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
         {label}
       </label>
       <Input
@@ -492,7 +492,7 @@ function SelectField({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+      <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
         {label}
       </label>
       <select

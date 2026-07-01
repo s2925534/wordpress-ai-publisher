@@ -228,7 +228,7 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <label className="text-sm font-medium text-slate-700">Action</label>
+          <label className="text-sm font-semibold text-slate-800">Action</label>
           <select className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm" value={publishAction} onChange={(event) => setPublishAction(event.target.value as 'draft' | 'publish' | 'schedule')}>
             <option value="draft">Create draft</option>
             <option value="publish">Publish</option>
@@ -255,7 +255,7 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
       <div className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-6">
         <div className="flex items-center justify-between">
           <Badge>Confirmation</Badge>
-          <span className="text-xs uppercase tracking-wide text-slate-500">ID {packageId}</span>
+          <span className="text-xs font-bold uppercase tracking-wide text-slate-600">ID {packageId}</span>
         </div>
 
         <Preview label="SEO readiness" value={`${record.seoPackage.readinessScore}/100`} />
@@ -289,7 +289,7 @@ function EditableField({
   return (
     <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+        <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
           {label}
         </label>
         <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
@@ -329,7 +329,7 @@ function TaxonomySelector<T>({
   return (
     <section className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-medium text-slate-800">{label}</h3>
+        <h3 className="text-sm font-bold text-slate-900">{label}</h3>
         <CopyButton value={selectedCopyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />
       </div>
 
@@ -358,7 +358,7 @@ function TaxonomySelector<T>({
 
       {remainingSuggestions.length ? (
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Suggested options</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-700">Suggested options</p>
           <div className="flex flex-wrap gap-2">
             {remainingSuggestions.map((item) => (
               <button
@@ -393,7 +393,7 @@ function Field({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={id}>
+      <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
         {label}
       </label>
       <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
@@ -405,7 +405,7 @@ function Preview({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
       </div>
       <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{value}</p>
@@ -419,7 +419,7 @@ function ChipPreview({ label, items }: { label: string; items: string[] }) {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={copyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
