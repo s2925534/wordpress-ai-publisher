@@ -21,7 +21,12 @@ include.
 
 ## Run
 
-`infra/web/docker-compose.web.yml` is a working example. Copy
+`infra/web/docker-compose.web.yml` is a generic, self-contained example --
+it builds locally and has no registry or host dependency. Don't edit it in
+place for your own deployment; copy it (e.g. to
+`infra/web/docker-compose.local.yml`, which `.gitignore` already excludes)
+and customize `image`/`container_name`/`ports`/`labels` there instead, so
+your own instance-specific values never end up in a commit. Copy
 `infra/web/.env.example` to `infra/web/.env` and fill in real values:
 
 - `APP_URL` -- the public URL this instance will be served from, e.g.
@@ -56,3 +61,24 @@ OpenAI credentials and the WordPress site connection are entered through the
 app's own Settings page after deployment (stored encrypted in the SQLite
 database), not via environment variables -- each deployed instance manages
 its own credentials independently.
+
+## Deploying to a Synology NAS (optional)
+
+None of the above requires any particular deployment tool -- any host that
+can run Docker Compose and reach GHCR (or build the image itself) works.
+If you happen to deploy to a Synology NAS, the author also maintains
+[synology-site-deployer](https://github.com/s2925534/synology-site-deployer),
+a standalone CLI for uploading a Compose file over SSH, allocating a port,
+and wiring up a Cloudflare Tunnel route. It's one option among many, not a
+dependency of this project -- using it (or not) has no effect on how the
+app itself is built or run.
+
+```bash
+synology-site deploy app.example.com \
+  --compose-file infra/web/docker-compose.local.yml \
+  --env-file infra/web/.env \
+  --port 5061 \
+  --container-name wordpress-ai-publisher \
+  --health-path /api/health \
+  --pull
+```

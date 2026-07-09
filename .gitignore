@@ -4,6 +4,7 @@
 # Local-only deployment context (real domain/naming) -- see CLAUDE.md itself
 # for why this must never be committed to this public, generic repo.
 /CLAUDE.md
+infra/web/docker-compose.local.yml
 node_modules
 .next
 dist
