@@ -40,10 +40,13 @@ COPY --from=builder /app/config ./config
 # Next's standalone tracing only bundles what server code actually imports
 # (@prisma/client + its generated engine) -- the `prisma` CLI binary is
 # invoked as a separate process for `migrate deploy` at container start, so
-# it isn't traced and has to be copied in explicitly, along with the schema
-# and migrations it needs to apply.
+# it isn't traced and has to be copied in explicitly. The CLI itself needs
+# its @prisma/* siblings (engines, fetch-engine, get-platform, ...), not
+# just the `prisma` package -- copy the whole scope rather than guessing
+# which subpackages `prisma migrate deploy` reaches into.
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/apps/web/prisma ./apps/web/prisma
 
 # SQLite database lives on a volume mounted here so it survives image
