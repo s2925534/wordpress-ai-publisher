@@ -3,6 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { NewPackageClient } from '@/app/new-package/package-client';
 import { SettingsService } from '@/server/settings-service';
 
+// Reads live settings/DB state -- must never be statically prerendered
+// (that would bake build-time DB state into the page for every visitor).
+export const dynamic = 'force-dynamic';
+
 export default async function NewPackagePage() {
   const defaultSiteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site';
   const defaultContentProfileKey = process.env.DEFAULT_CONTENT_PROFILE_KEY ?? 'linkedin-blog-package';
@@ -24,7 +28,8 @@ export default async function NewPackagePage() {
           <CardHeader>
             <CardTitle>Content generation</CardTitle>
             <CardDescription>
-              This slice uses the mock AI provider and strict Zod validation so the package can be
+              Uses your configured OpenAI key when Settings has one saved (falls back to a mock
+              placeholder provider otherwise), with strict Zod validation so the package can be
               edited safely before anything is published later.
             </CardDescription>
           </CardHeader>
