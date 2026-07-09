@@ -2,6 +2,10 @@ import { Badge } from '@/components/ui/badge';
 import { SettingsClient } from '@/app/settings/settings-client';
 import { SettingsService } from '@/server/settings-service';
 
+// Reads live settings/DB state -- must never be statically prerendered
+// (that would bake build-time DB state into the page for every visitor).
+export const dynamic = 'force-dynamic';
+
 export default async function SettingsPage() {
   const service = new SettingsService(process.env.CONFIG_DIR ?? './config');
   const settings = await service.getSettings();

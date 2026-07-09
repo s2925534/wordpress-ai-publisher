@@ -5,6 +5,10 @@ import { DiscoveryService } from '@/server/discovery-service';
 
 const siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site';
 
+// Reads live settings/DB state -- must never be statically prerendered
+// (that would bake build-time DB state into the page for every visitor).
+export const dynamic = 'force-dynamic';
+
 export default async function SiteDiscoveryPage() {
   const service = new DiscoveryService(process.env.CONFIG_DIR ?? './config');
   const site = await service.getDefaultSiteRecord();
