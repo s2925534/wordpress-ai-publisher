@@ -1,6 +1,9 @@
 .env
 .env.local
 .env.*.local
+# Local-only deployment context (real domain/naming) -- see CLAUDE.md itself
+# for why this must never be committed to this public, generic repo.
+/CLAUDE.md
 node_modules
 .next
 dist
