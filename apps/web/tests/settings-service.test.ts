@@ -41,7 +41,7 @@ describe('SettingsService', () => {
 
     const result = await service.updateSettings({
       openAiApiKey: 'openai-key',
-      wordpressSiteUrl: 'https://veloso.dev',
+      wordpressSiteUrl: 'https://example.com',
       wordpressUsername: 'pedro',
       wordpressApplicationPassword: 'app-password',
       wordpressPluginToken: 'plugin-token'
@@ -59,7 +59,7 @@ describe('SettingsService', () => {
     const service = new SettingsService('./config', { prisma: prisma as any });
 
     await service.updateSettings({
-      wordpressSiteUrl: 'https://veloso.dev',
+      wordpressSiteUrl: 'https://example.com',
       wordpressUsername: 'pedro'
     });
 
@@ -84,7 +84,7 @@ describe('SettingsService', () => {
     });
 
     expect(result.wordpressUsername).toBe('pedro');
-    expect(result.wordpressSiteUrl).toBe('https://veloso.dev');
+    expect(result.wordpressSiteUrl).toBe('https://example.com');
     expect(result.selectedAiSafeguardId).toBe('custom-jokes');
     expect(result.aiSafeguards.some((item) => item.id === 'custom-jokes')).toBe(true);
   });

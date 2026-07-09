@@ -1,30 +1,35 @@
+# Generic, self-contained example -- works standalone with no registry or
+# host dependency: `docker compose -f infra/web/docker-compose.web.yml up
+# -d --build`. Copy this file (e.g. to docker-compose.local.yml, gitignored)
+# and customize image/container_name/ports/labels for your own environment
+# instead of editing this one -- see docs/DEPLOYMENT.md.
 services:
   web:
     build:
       context: ../..
       dockerfile: apps/web/Dockerfile
-    # Fully-qualified GHCR reference -- `deploy --pull` (no --build) needs a
-    # registry host in the name to actually pull from GHCR rather than
-    # silently trying (and failing) against Docker Hub. `build:` above is
-    # still used for `--build`/local-dev fallback.
-    image: ghcr.io/s2925534/wordpress-ai-publisher:latest
-    container_name: publisher
+    # No `image:` pointing at a specific registry/account by default --
+    # `build:` above is enough for local/self-hosted use. If you publish to
+    # a registry (see .github/workflows/docker-publish.yml, which already
+    # publishes to ghcr.io/<your-github-repo> automatically on push), add
+    # your own fully-qualified reference here, e.g.:
+    #   image: ghcr.io/your-org/wordpress-ai-publisher:latest
+    container_name: wordpress-ai-publisher
     restart: unless-stopped
     env_file:
       - .env
     ports:
-      - "5061:3000"
+      - "3000:3000"
     volumes:
       # SQLite database -- must survive image updates/container recreation,
       # which is why it lives on a named volume instead of inside the image.
-      - publisher_data:/app/data
+      - wordpress_ai_publisher_data:/app/data
     labels:
-      # Watched by the NAS's existing Watchtower (see Resilinked's
-      # infra/watchtower) -- auto-pulls + restarts when CI publishes a new
-      # :latest image after a push to main. Watchtower polls the whole
-      # Docker host by label, so no per-project Watchtower instance is
-      # needed here.
+      # Optional: if you run an auto-update watcher on your host (e.g.
+      # Watchtower) that polls by label rather than managing this project
+      # directly, this is a harmless no-op label to opt in. Remove it if
+      # you don't use one.
       - com.centurylinklabs.watchtower.enable=true
 
 volumes:
-  publisher_data:
+  wordpress_ai_publisher_data:

@@ -149,14 +149,14 @@ describe('DiscoveryService', () => {
     const service = new DiscoveryService(configDir, {
       prisma: mockPrisma as any,
       fetchFn: async (input) => {
-        expect(input.toString()).toContain('https://www.veloso.dev/wp-json/publisher/v1/discovery');
+        expect(input.toString()).toContain('https://www.example.com/wp-json/publisher/v1/discovery');
         return new Response(
           JSON.stringify({
             success: true,
             data: {
               siteInfo: {
-                siteName: 'Veloso',
-                siteUrl: 'https://www.veloso.dev',
+                siteName: 'Example',
+                siteUrl: 'https://www.example.com',
                 timezone: 'UTC',
                 locale: 'en-US',
                 restApiAvailable: true
@@ -191,13 +191,13 @@ describe('DiscoveryService', () => {
     await service.getDefaultSiteRecord();
     await mockPrisma.wordPressSite.upsert({
       where: { siteKey: 'default-site' },
-      update: { siteUrl: 'https://www.veloso.dev', siteHostname: 'www.veloso.dev' },
+      update: { siteUrl: 'https://www.example.com', siteHostname: 'www.example.com' },
       create: {
         siteKey: 'default-site',
-        name: 'Veloso',
-        siteUrl: 'https://www.veloso.dev',
+        name: 'Example',
+        siteUrl: 'https://www.example.com',
         siteProtocol: 'https',
-        siteHostname: 'www.veloso.dev',
+        siteHostname: 'www.example.com',
         timezone: null,
         defaultStatus: 'draft'
       }
@@ -206,7 +206,7 @@ describe('DiscoveryService', () => {
     const result = await service.refresh('default-site');
 
     expect(result.source).toBe('plugin');
-    expect(result.snapshot.siteUrl).toBe('https://www.veloso.dev');
+    expect(result.snapshot.siteUrl).toBe('https://www.example.com');
   });
 
   it('normalizes recent posts with missing slugs instead of falling back', async () => {
@@ -220,8 +220,8 @@ describe('DiscoveryService', () => {
             success: true,
             data: {
               siteInfo: {
-                siteName: 'Veloso',
-                siteUrl: 'https://www.veloso.dev',
+                siteName: 'Example',
+                siteUrl: 'https://www.example.com',
                 timezone: 'UTC',
                 locale: 'en-US',
                 restApiAvailable: true
@@ -240,7 +240,7 @@ describe('DiscoveryService', () => {
                 {
                   id: 11,
                   title: 'Recent post',
-                  url: 'https://www.veloso.dev/recent-post',
+                  url: 'https://www.example.com/recent-post',
                   status: 'publish'
                 }
               ],
@@ -276,8 +276,8 @@ describe('DiscoveryService', () => {
             success: true,
             data: {
               siteInfo: {
-                siteName: 'Veloso',
-                siteUrl: 'https://www.veloso.dev',
+                siteName: 'Example',
+                siteUrl: 'https://www.example.com',
                 timezone: 'UTC',
                 locale: 'en-US',
                 restApiAvailable: true
