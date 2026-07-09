@@ -27,6 +27,7 @@ describe('generation schemas', () => {
     const parsed = generatedPackageResponseSchema.parse({
       title: 'Example Title',
       linkedinPost: 'Example post.\n\n#One #Two',
+      articleContent: '<p>Example article body.</p>',
       excerpt: 'Example excerpt.',
       plainCsvTags: 'one, two',
       recommendedCategories: [

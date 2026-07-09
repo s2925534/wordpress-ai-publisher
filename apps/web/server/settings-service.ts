@@ -126,6 +126,26 @@ export class SettingsService {
     };
   }
 
+  /**
+   * Decrypted OpenAI credentials for constructing a real provider server-side.
+   * Unlike getSettings(), this must never be returned from an API route.
+   */
+  async getOpenAiProviderConfig(siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site') {
+    const apiKey = decryptSecret(await this.getSetting(OPENAI_API_KEY));
+    if (!apiKey) {
+      return null;
+    }
+
+    const textModel = await this.getSetting(OPENAI_TEXT_MODEL_KEY);
+    const imageModel = await this.getSetting(OPENAI_IMAGE_MODEL_KEY);
+
+    return {
+      apiKey,
+      textModel: textModel || DEFAULT_OPENAI_TEXT_MODEL,
+      imageModel: imageModel || DEFAULT_OPENAI_IMAGE_MODEL
+    };
+  }
+
   async updateSettings(input: SettingsUpdate, siteKey = process.env.DEFAULT_SITE_KEY ?? 'default-site') {
     const parsed = settingsUpdateSchema.parse(input);
     const siteConfig = await this.configService.loadSiteConfig(siteKey);

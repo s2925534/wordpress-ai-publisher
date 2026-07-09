@@ -100,6 +100,7 @@ export class PackageService {
         contentProfileId: await this.resolveContentProfileId(contentProfile.profileKey),
         title: normalized.title,
         linkedinPost: normalized.linkedinPost,
+        articleContent: normalized.articleContent,
         excerpt: normalized.excerpt,
         plainCsvTags: normalized.plainCsvTags,
         recommendedCategories: normalized.recommendedCategories,
@@ -123,7 +124,7 @@ export class PackageService {
     const record = await this.getPackageRecord(packageId);
     const siteConfig = await this.loadSiteConfigBySiteId(record.wordpressSiteId);
     const imagePrompt = record.featureImagePrompt ?? (await this.aiProvider.generateImagePrompt({
-      inputText: record.linkedinPost,
+      inputText: record.articleContent || record.linkedinPost,
       sourceSafetyType: 'notes_only',
       siteConfig,
       contentProfile: await this.loadContentProfileBySiteId(record.contentProfileId),
@@ -131,7 +132,7 @@ export class PackageService {
     }));
 
     const altText = record.altText || (await this.aiProvider.generateAltText({
-      inputText: record.linkedinPost,
+      inputText: record.articleContent || record.linkedinPost,
       sourceSafetyType: 'notes_only',
       siteConfig,
       contentProfile: await this.loadContentProfileBySiteId(record.contentProfileId),
@@ -145,7 +146,7 @@ export class PackageService {
     }
 
     const image = await this.aiProvider.generateImage({
-      inputText: record.linkedinPost,
+      inputText: record.articleContent || record.linkedinPost,
       sourceSafetyType: 'notes_only',
       siteConfig,
       contentProfile: await this.loadContentProfileBySiteId(record.contentProfileId),
@@ -188,6 +189,7 @@ export class PackageService {
       data: {
         ...('title' in parsed ? { title: parsed.title } : {}),
         ...('linkedinPost' in parsed ? { linkedinPost: parsed.linkedinPost } : {}),
+        ...('articleContent' in parsed ? { articleContent: parsed.articleContent } : {}),
         ...('excerpt' in parsed ? { excerpt: parsed.excerpt } : {}),
         ...('plainCsvTags' in parsed ? { plainCsvTags: parsed.plainCsvTags } : {}),
         ...('altText' in parsed ? { altText: parsed.altText } : {}),
@@ -251,7 +253,7 @@ export class PackageService {
       siteConfig,
       {
         title: record.title,
-        content: record.linkedinPost,
+        content: record.articleContent || record.linkedinPost,
         excerpt: record.excerpt,
         slug: record.seoPackage.slug,
         status: action === 'publish' ? 'draft' : action === 'schedule' ? 'future' : 'draft',

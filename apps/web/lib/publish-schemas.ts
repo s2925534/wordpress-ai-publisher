@@ -7,6 +7,7 @@ export const publishActionSchema = z.enum(['draft', 'publish', 'schedule']);
 export const packageUpdateSchema = z.object({
   title: z.string().min(1).optional(),
   linkedinPost: z.string().min(1).optional(),
+  articleContent: z.string().min(1).optional(),
   excerpt: z.string().min(1).optional(),
   plainCsvTags: z.string().min(1).optional(),
   altText: z.string().min(1).optional(),

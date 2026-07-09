@@ -281,6 +281,7 @@ export function NewPackageClient({
         {generated ? (
           <div className="mt-4 space-y-4 text-sm text-slate-700">
             <Detail label="Title" value={generated.title} />
+            <Detail label="Article Content" value={generated.articleContent} />
             <Detail label="LinkedIn Post" value={generated.linkedinPost} />
             <Detail label="Excerpt" value={generated.excerpt} />
             <Detail label="Plain CSV Tags" value={generated.plainCsvTags} />

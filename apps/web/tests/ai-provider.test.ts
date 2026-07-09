@@ -51,6 +51,22 @@ describe('AI provider foundation', () => {
     expect(packageResult.linkedinPost).not.toContain('Write a joke about Australia');
   });
 
+  it('does not echo the raw instruction back as excerpt, meta description, or article content', async () => {
+    const provider = new MockAIProvider();
+    const packageResult = await provider.generatePublicationPackage({
+      inputText: 'write a post about computer programming',
+      inputMode: 'ai_prompt',
+      sourceSafetyType: 'notes_only',
+      siteConfig: createDefaultSiteConfig('https://example.com'),
+      contentProfile: createDefaultContentProfile()
+    });
+
+    expect(packageResult.excerpt.toLowerCase()).not.toContain('write a post about');
+    expect(packageResult.seoPackage.metaDescription.toLowerCase()).not.toContain('write a post about');
+    expect(packageResult.articleContent.toLowerCase()).not.toContain('write a post about');
+    expect(packageResult.articleContent.toLowerCase()).toContain('computer programming');
+  });
+
   it('keeps instruction-like text literal when source material mode is selected', async () => {
     const provider = new MockAIProvider();
     const packageResult = await provider.generatePublicationPackage({

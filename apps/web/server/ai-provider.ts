@@ -55,6 +55,31 @@ export interface AIProvider {
   regenerateSection(input: RegenerationInput): Promise<string>;
 }
 
+const PUBLICATION_PACKAGE_SYSTEM_PROMPT = [
+  'Generate a publication package as strict JSON with exactly these keys:',
+  '- title: string',
+  '- linkedinPost: string (short LinkedIn-style post, ends with hashtags)',
+  '- articleContent: string (the full long-form WordPress post body as clean HTML using <p>/<h2>/<h3>/<ul>/<ol> -- this is the actual article, not a summary or a repeat of linkedinPost)',
+  '- excerpt: string (1-3 sentence teaser)',
+  '- plainCsvTags: string (comma-separated tags, no hashtags)',
+  '- recommendedCategories: array of { name, slug?, confidence: "high"|"medium"|"low"|"none", reason, existingCategoryId? }',
+  '- recommendedTags: array of strings',
+  '- featureImagePrompt: string',
+  '- altText: string',
+  '- suggestedImageFileName: string (lowercase-hyphenated)',
+  '- seoPackage: { seoTitle, slug, metaDescription, primaryKeyword, secondaryKeywords: string[], searchIntentSummary, readinessScore: number (0-100), warnings: string[], internalLinkSuggestions: string[] }',
+  '- sourceSafetyType: echo back the exact source safety value given in the input',
+  'Respond with the JSON object only -- no markdown, no code fences, no commentary.'
+].join('\n');
+
+const SEO_PACKAGE_SYSTEM_PROMPT = [
+  'Generate an SEO package as strict JSON with exactly these keys:',
+  '- seoTitle, slug, metaDescription, primaryKeyword, searchIntentSummary: string',
+  '- secondaryKeywords, warnings, internalLinkSuggestions: string[]',
+  '- readinessScore: number (0-100)',
+  'Respond with the JSON object only -- no markdown, no code fences, no commentary.'
+].join('\n');
+
 export class MockAIProvider implements AIProvider {
   async generatePublicationPackage(input: PackageGenerationInput): Promise<PublicationPackage> {
     const title = this.buildTitle(input.inputText, input.inputMode);
@@ -67,6 +92,7 @@ export class MockAIProvider implements AIProvider {
     return publicationPackageSchema.parse({
       title,
       linkedinPost: this.buildLinkedInPost(input),
+      articleContent: this.buildArticleContent(input, title),
       excerpt: this.buildExcerpt(input),
       plainCsvTags: recommendedTags.join(', '),
       recommendedCategories: this.buildRecommendedCategories(input),
@@ -82,7 +108,7 @@ export class MockAIProvider implements AIProvider {
   async generateSeoPackage(input: SeoGenerationInput): Promise<SeoPackage> {
     const title = input.title ?? this.buildTitle(input.inputText, input.inputMode);
     const slug = slugify(title);
-    const metaDescription = summarizeText(input.inputText, 24);
+    const metaDescription = this.buildMetaDescription(input);
 
     return seoPackageSchema.parse({
       seoTitle: title,
@@ -208,8 +234,48 @@ export class MockAIProvider implements AIProvider {
       return `A light, workplace-friendly joke about ${task.topic.toLowerCase()}.`;
     }
 
+    if (task) {
+      // The instruction was parsed as an AI prompt (e.g. "write a post about
+      // X") -- describe the topic, don't echo the instruction text itself.
+      const audience = input.siteConfig.brand.audiences[0] ?? 'readers';
+      return `A practical, original overview of ${task.topic.toLowerCase()} for ${audience}.`;
+    }
+
     const summary = summarizeText(input.inputText, 28);
     return summary.endsWith('.') ? summary : `${summary}.`;
+  }
+
+  private buildArticleContent(input: PackageGenerationInput, title: string) {
+    const task = parseTaskInstruction(input.inputText, input.inputMode);
+    if (task?.kind === 'joke') {
+      return `<p>${this.buildLinkedInPost(input).split('\n\n')[0]}</p>`;
+    }
+
+    const topic = task ? task.topic : summarizeText(firstSentence(input.inputText) || input.inputText, 12);
+    const topicLower = topic.toLowerCase();
+    const audience = input.siteConfig.brand.audiences[0] ?? 'readers';
+
+    return [
+      `<p>${title} is a topic that matters to ${audience}. This article lays out the practical fundamentals of ${topicLower}, why it matters, and how to apply it.</p>`,
+      `<h2>Why ${titleCase(topic)} Matters</h2>`,
+      `<p>Understanding ${topicLower} helps teams make better decisions, avoid common pitfalls, and build more reliable outcomes.</p>`,
+      `<h2>Getting Started</h2>`,
+      `<p>Start with the fundamentals, validate assumptions early, and iterate based on real feedback rather than guesswork.</p>`,
+      `<h2>Key Takeaways</h2>`,
+      `<p>Keep the approach practical, structured, and grounded in evidence as you apply ${topicLower} in your own work.</p>`
+    ].join('\n');
+  }
+
+  private buildMetaDescription(input: PackageGenerationInput) {
+    const task = parseTaskInstruction(input.inputText, input.inputMode);
+    if (task && task.kind !== 'joke') {
+      return summarizeText(
+        `A practical guide to ${task.topic.toLowerCase()}, covering what matters and how to apply it.`,
+        24
+      );
+    }
+
+    return summarizeText(input.inputText, 24);
   }
 
   private buildRecommendedTags(input: PackageGenerationInput) {
@@ -254,20 +320,22 @@ export class OpenAIProvider implements AIProvider {
 
   async generatePublicationPackage(input: PackageGenerationInput): Promise<PublicationPackage> {
     const raw = await this.requestText(
-      'Generate a publication package as strict JSON.',
+      PUBLICATION_PACKAGE_SYSTEM_PROMPT,
       buildDefaultContentProfilePrompt(input),
-      this.options.textModel
+      this.options.textModel,
+      { jsonMode: true }
     );
-    return publicationPackageSchema.parse(JSON.parse(raw));
+    return publicationPackageSchema.parse(this.normalizeSlugFields(this.parseJsonResponse(raw)));
   }
 
   async generateSeoPackage(input: SeoGenerationInput): Promise<SeoPackage> {
     const raw = await this.requestText(
-      'Generate an SEO package as strict JSON.',
+      SEO_PACKAGE_SYSTEM_PROMPT,
       buildDefaultContentProfilePrompt(input),
-      this.options.textModel
+      this.options.textModel,
+      { jsonMode: true }
     );
-    return seoPackageSchema.parse(JSON.parse(raw));
+    return seoPackageSchema.parse(this.normalizeSlugFields(this.parseJsonResponse(raw)));
   }
 
   async generateImagePrompt(input: ImagePromptInput): Promise<string> {
@@ -324,7 +392,58 @@ export class OpenAIProvider implements AIProvider {
     };
   }
 
-  private async requestText(systemPrompt: string, userPrompt: string, model: string) {
+  // Chat models reliably produce a URL-safe-ish slug but not always exactly
+  // "lowercase-hyphenated" (stray extensions, capitals, underscores) -- run
+  // model-produced slug-shaped fields back through our own slugify() rather
+  // than trusting the raw string to satisfy the strict schema regex.
+  private normalizeSlugFields(payload: unknown) {
+    if (!payload || typeof payload !== 'object') {
+      return payload;
+    }
+
+    const value = payload as Record<string, unknown>;
+
+    if (typeof value.slug === 'string') {
+      value.slug = slugify(value.slug.replace(/\.[a-z0-9]+$/i, ''));
+    }
+
+    if (typeof value.suggestedImageFileName === 'string') {
+      value.suggestedImageFileName = slugify(value.suggestedImageFileName.replace(/\.[a-z0-9]+$/i, ''));
+    }
+
+    if (value.seoPackage && typeof value.seoPackage === 'object') {
+      this.normalizeSlugFields(value.seoPackage);
+    }
+
+    if (Array.isArray(value.recommendedCategories)) {
+      for (const category of value.recommendedCategories) {
+        if (category && typeof category === 'object' && typeof (category as Record<string, unknown>).slug === 'string') {
+          const categoryRecord = category as Record<string, unknown>;
+          categoryRecord.slug = slugify((categoryRecord.slug as string).replace(/\.[a-z0-9]+$/i, ''));
+        }
+      }
+    }
+
+    return value;
+  }
+
+  private parseJsonResponse(raw: string) {
+    // Chat models frequently wrap JSON replies in ```json ... ``` fences even
+    // when told to respond with JSON only -- strip those before parsing.
+    const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    try {
+      return JSON.parse(cleaned);
+    } catch (error) {
+      throw new Error(`OpenAI response was not valid JSON: ${(error as Error).message}`);
+    }
+  }
+
+  private async requestText(
+    systemPrompt: string,
+    userPrompt: string,
+    model: string,
+    options: { jsonMode?: boolean } = {}
+  ) {
     const response = await this.fetchFn('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: this.authHeaders(),
@@ -334,12 +453,16 @@ export class OpenAIProvider implements AIProvider {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.4
+        // No `temperature` override -- newer reasoning-tier models (e.g. the
+        // gpt-5.x family) reject any value other than the default (1) and
+        // error out with `unsupported_value` if one is sent.
+        ...(options.jsonMode ? { response_format: { type: 'json_object' } } : {})
       })
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI request failed with status ${response.status}`);
+      const errorBody = await response.text().catch(() => '');
+      throw new Error(`OpenAI request failed with status ${response.status}${errorBody ? `: ${errorBody}` : ''}`);
     }
 
     const payload = (await response.json()) as {

@@ -14,6 +14,7 @@ type PackageRecord = {
   id: string;
   title: string;
   linkedinPost: string;
+  articleContent: string;
   excerpt: string;
   plainCsvTags: string;
   featureImagePrompt?: string | null;
@@ -77,6 +78,7 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
         body: JSON.stringify({
           title: record.title,
           linkedinPost: record.linkedinPost,
+          articleContent: record.articleContent,
           excerpt: record.excerpt,
           plainCsvTags: record.plainCsvTags,
           altText: record.altText,
@@ -172,6 +174,7 @@ export function PackageEditorClient({ packageId, initialPackage }: Props) {
     <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
       <div className="space-y-4">
         <EditableField label="Title" value={record.title} required onChange={(value) => setRecord((current) => ({ ...current, title: value }))} />
+        <EditableField label="Article Content" textarea value={record.articleContent} required onChange={(value) => setRecord((current) => ({ ...current, articleContent: value }))} />
         <EditableField label="LinkedIn Post" textarea value={record.linkedinPost} required onChange={(value) => setRecord((current) => ({ ...current, linkedinPost: value }))} />
         <EditableField label="Excerpt" textarea value={record.excerpt} required onChange={(value) => setRecord((current) => ({ ...current, excerpt: value }))} />
         <EditableField
@@ -604,6 +607,7 @@ function normalizePackageRecord(record: PackageRecord): PackageRecord {
 
   return {
     ...record,
+    articleContent: record.articleContent || '',
     plainCsvTags: recommendedTags.join(', '),
     recommendedTags,
     tagRecommendations: record.tagRecommendations?.map((tag) => ({
