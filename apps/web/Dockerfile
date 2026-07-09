@@ -38,14 +38,17 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 COPY --from=builder /app/config ./config
 
 # Next's standalone tracing only bundles what server code actually imports
-# (@prisma/client + its generated engine) -- the `prisma` CLI binary is
-# invoked as a separate process for `migrate deploy` at container start, so
-# it isn't traced and has to be copied in explicitly. The CLI itself needs
-# its @prisma/* siblings (engines, fetch-engine, get-platform, ...), not
-# just the `prisma` package -- copy the whole scope rather than guessing
-# which subpackages `prisma migrate deploy` reaches into.
+# (@prisma/client + its generated engine) -- the `prisma` CLI package is
+# invoked as a separate process for `migrate deploy` at container start
+# (see docker-entrypoint.sh), so it isn't traced and has to be copied in
+# explicitly. It needs its @prisma/* siblings too (engines, fetch-engine,
+# get-platform, ...) -- copy the whole scope rather than guessing which
+# subpackages `migrate deploy` reaches into. Deliberately not copying
+# node_modules/.bin/prisma (a symlink to prisma/build/index.js) -- the CLI
+# resolves sibling .wasm files relative to its own real path, and that
+# resolution breaks once Docker copies the symlink; invoked by real path
+# instead in docker-entrypoint.sh.
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/apps/web/prisma ./apps/web/prisma
 
