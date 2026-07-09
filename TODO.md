@@ -1,5 +1,32 @@
 # TODO — AI content generation produces echoed prompts instead of real content
 
+## STATUS: FIXED AND DEPLOYED (2026-07-09)
+
+All items below were implemented, tested against the real OpenAI API, and deployed:
+
+- Fixed all 4 issues below (OpenAIProvider wiring, mock echo, article content
+  field, JSON hardening) plus a `temperature` param real gpt-5.5 rejects, and
+  non-conforming slugs from the model -- see commits on `main` from
+  2026-07-09 (`fix: wire real OpenAI generation and add Docker deployment`
+  onward).
+- Verified live against the real OpenAI API locally: "write a post about
+  computer programming" now returns a full original article, no echo.
+- Also found and fixed a real bug surfaced along the way: `/dashboard`,
+  `/settings`, `/site-discovery`, `/new-package` were being statically
+  prerendered at build time (baking in build-time DB state) instead of
+  rendered per-request -- added `export const dynamic = 'force-dynamic'`.
+- Deployed to **https://wp-publisher.veloso.dev** on the Synology NAS,
+  registry-based (GHCR + `.github/workflows/docker-publish.yml`), with the
+  NAS's existing Watchtower auto-pulling `:latest` on every push to `main`
+  (same pattern as the Resilinked deployment) -- no manual redeploy needed
+  for future changes.
+- Remaining action for you: open Settings on the deployed site and enter an
+  OpenAI API key + your WordPress site connection -- this is a fresh
+  install with its own empty database, separate from local dev.
+- Not addressed (out of scope for this pass): GitHub flagged 7 Dependabot
+  vulnerabilities (2 critical, 1 high, 4 moderate) on the repo -- worth a
+  separate look, unrelated to the generation bug.
+
 ## Investigation summary (2026-07-09)
 
 Reported symptom: asking for e.g. "write a post about computer programming" returns
