@@ -15,11 +15,12 @@ All items below were implemented, tested against the real OpenAI API, and deploy
   `/settings`, `/site-discovery`, `/new-package` were being statically
   prerendered at build time (baking in build-time DB state) instead of
   rendered per-request -- added `export const dynamic = 'force-dynamic'`.
-- Deployed to **https://wp-publisher.veloso.dev** on the Synology NAS,
-  registry-based (GHCR + `.github/workflows/docker-publish.yml`), with the
-  NAS's existing Watchtower auto-pulling `:latest` on every push to `main`
-  (same pattern as the Resilinked deployment) -- no manual redeploy needed
-  for future changes.
+- Deployed to a subdomain (e.g. `https://app.example.com` -- see `CLAUDE.md`
+  for the actual current deployment target, not committed here since this
+  repo is generic/reusable), registry-based (GHCR +
+  `.github/workflows/docker-publish.yml`), with the NAS's existing
+  Watchtower auto-pulling `:latest` on every push to `main` -- no manual
+  redeploy needed for future changes.
 - Remaining action for you: open Settings on the deployed site and enter an
   OpenAI API key + your WordPress site connection -- this is a fresh
   install with its own empty database, separate from local dev.
