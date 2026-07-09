@@ -24,33 +24,28 @@ COPY . .
 RUN npm run --workspace apps/web prisma:generate
 RUN npm run --workspace apps/web build
 
-# ---- runner: minimal production image, Next.js standalone output ----
+# ---- runner: production image ----
+# Not using Next's "standalone" output here -- its pruned node_modules only
+# traces what server code *imports* at runtime, which excludes the `prisma`
+# CLI (invoked as a separate process for `migrate deploy`, see
+# docker-entrypoint.sh) and its own deep dependency tree (@prisma/config ->
+# effect, etc). Copying the full installed workspace instead guarantees the
+# CLI and everything it needs is present, at the cost of image size --
+# acceptable for a personal-use tool.
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/package.json ./apps/web/package.json
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next ./apps/web/.next
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/prisma ./apps/web/prisma
 # Site/content-profile config JSON read from disk at runtime (ConfigService),
 # not bundled into the JS build.
-COPY --from=builder /app/config ./config
-
-# Next's standalone tracing only bundles what server code actually imports
-# (@prisma/client + its generated engine) -- the `prisma` CLI package is
-# invoked as a separate process for `migrate deploy` at container start
-# (see docker-entrypoint.sh), so it isn't traced and has to be copied in
-# explicitly. It needs its @prisma/* siblings too (engines, fetch-engine,
-# get-platform, ...) -- copy the whole scope rather than guessing which
-# subpackages `migrate deploy` reaches into. Deliberately not copying
-# node_modules/.bin/prisma (a symlink to prisma/build/index.js) -- the CLI
-# resolves sibling .wasm files relative to its own real path, and that
-# resolution breaks once Docker copies the symlink; invoked by real path
-# instead in docker-entrypoint.sh.
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/apps/web/prisma ./apps/web/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/config ./config
 
 # SQLite database lives on a volume mounted here so it survives image
 # updates/container recreation (see infra/web/docker-compose.web.yml).
@@ -63,4 +58,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["node", "apps/web/server.js"]
+CMD ["npm", "run", "--workspace", "apps/web", "start"]
