@@ -19,6 +19,7 @@ export const generatedPackageResponseSchema = z.object({
   generationRequestId: z.string().min(1).optional(),
   title: z.string().min(1),
   linkedinPost: z.string().min(1),
+  articleContent: z.string().min(1),
   excerpt: z.string().min(1),
   plainCsvTags: z.string().min(1),
   recommendedCategories: z.array(

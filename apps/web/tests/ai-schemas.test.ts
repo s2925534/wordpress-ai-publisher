@@ -18,6 +18,7 @@ describe('AI schemas', () => {
       publicationPackageSchema.parse({
         title: 'Example',
         linkedinPost: 'Example',
+        articleContent: '<p>Example article body.</p>',
         excerpt: 'Example',
         plainCsvTags: 'one, two',
         recommendedCategories: [],

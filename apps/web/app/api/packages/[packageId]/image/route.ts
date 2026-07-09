@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 
 import { PackageService } from '@/server/package-service';
+import { createAiProvider } from '@/server/ai-provider-factory';
 import { errorResponse } from '@/lib/route-response';
 
-function getService() {
-  return new PackageService(process.env.CONFIG_DIR ?? './config');
+async function getService() {
+  const configDir = process.env.CONFIG_DIR ?? './config';
+  const aiProvider = await createAiProvider(configDir);
+  return new PackageService(configDir, { aiProvider });
 }
 
 export async function POST(_request: Request, context: { params: Promise<{ packageId: string }> }) {
   try {
     const { packageId } = await context.params;
-    const service = getService();
+    const service = await getService();
     const result = await service.prepareImage(packageId);
 
     return NextResponse.json({

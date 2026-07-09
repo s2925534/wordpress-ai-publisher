@@ -1,0 +1,30 @@
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    # Fully-qualified GHCR reference -- `deploy --pull` (no --build) needs a
+    # registry host in the name to actually pull from GHCR rather than
+    # silently trying (and failing) against Docker Hub. `build:` above is
+    # still used for `--build`/local-dev fallback.
+    image: ghcr.io/s2925534/wordpress-ai-publisher:latest
+    container_name: wp-publisher
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5061:3000"
+    volumes:
+      # SQLite database -- must survive image updates/container recreation,
+      # which is why it lives on a named volume instead of inside the image.
+      - wp_publisher_data:/app/data
+    labels:
+      # Watched by the NAS's existing Watchtower (see Resilinked's
+      # infra/watchtower) -- auto-pulls + restarts when CI publishes a new
+      # :latest image after a push to main. Watchtower polls the whole
+      # Docker host by label, so no per-project Watchtower instance is
+      # needed here.
+      - com.centurylinklabs.watchtower.enable=true
+
+volumes:
+  wp_publisher_data:

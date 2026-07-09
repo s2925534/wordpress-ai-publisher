@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 
 import { PackageService } from '@/server/package-service';
+import { createAiProvider } from '@/server/ai-provider-factory';
 import { errorResponse } from '@/lib/route-response';
 
-function getService() {
-  return new PackageService(process.env.CONFIG_DIR ?? './config');
+async function getService(siteKey?: string) {
+  const configDir = process.env.CONFIG_DIR ?? './config';
+  const aiProvider = await createAiProvider(configDir, siteKey);
+  return new PackageService(configDir, { aiProvider });
 }
 
 export async function POST(request: Request) {
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const service = getService();
+    const service = await getService(body.siteKey);
     const result = await service.generate({
       inputText: body.inputText,
       inputMode: body.inputMode,

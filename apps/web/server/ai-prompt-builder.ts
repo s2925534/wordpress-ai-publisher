@@ -45,6 +45,7 @@ export function buildDefaultContentProfilePrompt(input: BuildPromptInput) {
       : '',
     `Source text: ${inputText}`,
     `Output order: ${contentProfile.outputOrder.join(' > ')}`,
+    'articleContent must be a full, original long-form WordPress post body (multiple sections/paragraphs, not a summary or a repeat of linkedinPost) formatted as clean HTML using <p>, <h2>, <h3>, and <ul>/<ol> as appropriate.',
     'Return original, publication-ready content that is practical, credible, and suitable for WordPress and LinkedIn.'
   ].filter(Boolean).join('\n');
 }
