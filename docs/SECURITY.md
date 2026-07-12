@@ -9,3 +9,9 @@ The app uses a split configuration model:
 - JSON config files hold safe defaults and content profiles.
 
 Secrets are never returned to the browser. Stored credentials are encrypted before persistence, and server-side validation is applied before any external request is made.
+
+## Authentication
+
+Every page and API route (except `/login` and `/api/health`) requires a signed-in session — see
+[`docs/AUTHENTICATION.md`](AUTHENTICATION.md) for the two supported sign-in modes (local
+username/password, always available; optional OIDC SSO) and how sessions/passwords are stored.

@@ -160,39 +160,41 @@ username/email/password login that always works with zero external dependency, a
 OIDC login (against authentik or any other OIDC provider) that can be turned on via env vars
 without being required.
 
-- [ ] **Critical — add a `User` model + migration.** Extend `apps/web/prisma/schema.prisma` with
-      a `User` table (`id`, `email`, `passwordHash`, `createdAt`, `updatedAt`); generate the
-      migration. Add `apps/web/server/auth-service.ts`: password hashing (argon2 or bcrypt) and
-      session issuance (signed cookie).
-- [ ] **Critical — local login routes + bootstrap admin.** Add a `/login` page and
-      `/api/auth/login` / `/api/auth/logout` routes. Bootstrap the first admin user from
-      `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars on first boot (in `docker-entrypoint.sh` or a
-      Prisma seed step) when the `User` table is empty — mirrors this project's own
-      `docker-entrypoint.sh` pattern and `../nas-sso-gateway`'s
-      `AUTHENTIK_BOOTSTRAP_EMAIL`/`AUTHENTIK_BOOTSTRAP_PASSWORD` convention. Add
-      `ADMIN_EMAIL`/`ADMIN_PASSWORD`/`SESSION_SECRET` to `.env.example`.
-- [ ] **Critical — optional OIDC SSO, env-gated and off by default.** Add `ENABLE_OIDC_SSO`
-      (default `false`), `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` env vars,
-      validated in `apps/web/server/env.ts` only when enabled. Add
-      `apps/web/server/oidc-service.ts` implementing the OIDC authorization-code flow. Add
-      `/api/auth/oidc/login` (redirect to issuer) and `/api/auth/oidc/callback` (fixed path —
-      redirect URI is always `APP_URL` + this path, no separate redirect-URI env var needed;
-      validate `state`/`nonce`). `/login` shows a "Sign in with SSO" option only when
-      `ENABLE_OIDC_SSO=true`, alongside the local form.
-- [ ] **High — protect every route with middleware.** Add `apps/web/middleware.ts` requiring a
-      valid session for everything except `/login`, `/api/auth/*`, and `/api/health`.
-      `/api/health` must stay open — it's what `../synology-site-deployer`'s
-      `deploy --health-path /api/health` and Watchtower poll; breaking it breaks deploys.
-- [ ] **High — middleware test coverage.** Extend the existing `tests/*.test.ts` pattern with
-      cases confirming an unauthenticated request to each protected route is redirected/401'd, and
-      an authenticated one passes through.
-- [ ] **Medium — document both auth modes.** Add `docs/AUTHENTICATION.md` covering: local login
-      (default, zero dependency), how to enable OIDC instead/alongside it, the OIDC issuer URL
-      format, the fixed callback path, requested scopes (`openid profile email`), and where the
-      client secret lives (`.env`, never committed) — this is the per-app detail that
-      `../nas-sso-gateway/docs/multi-app-rollout.md` says belongs in the app's own repo, not in the
-      SSO gateway repo. Update `docs/SECURITY.md`'s current "no user-facing auth" description to
-      match the new reality.
-- [ ] **Low — auth-service/oidc-service unit tests.** Cover password hashing/verification,
-      session issuance/expiry, and OIDC `state`/`nonce` validation, following the existing
-      `tests/*.test.ts` conventions.
+- [x] **Critical — add a `User` model + migration.** Added `User`/`Session` models
+      (`apps/web/prisma/schema.prisma`, migration `20260712222131_add_user_and_session`) and
+      `apps/web/server/auth-service.ts`. Used Node's built-in `crypto.scrypt` (random salt,
+      constant-time compare) instead of adding an argon2/bcrypt dependency — this codebase already
+      uses raw `node:crypto` in `secret-utils.ts`, so this avoids a new native-module dependency.
+- [x] **Critical — local login routes + bootstrap admin.** `/login` page + `/api/auth/login` /
+      `/api/auth/logout`. `apps/web/server/bootstrap-admin.ts` seeds the first user from
+      `ADMIN_EMAIL`/`ADMIN_PASSWORD` (only when the `User` table is empty), wired into
+      `docker-entrypoint.sh` after `prisma migrate deploy`. Added `ADMIN_EMAIL`/`ADMIN_PASSWORD` to
+      `.env.example` — no `SESSION_SECRET` needed in the end: sessions are DB-backed
+      (`Session` model) with an opaque cookie ID, not a signed/stateless token.
+- [x] **Critical — optional OIDC SSO, env-gated and off by default.** `ENABLE_OIDC_SSO` (default
+      `false`), `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` in `env.ts` (`superRefine`
+      requires the three OIDC_* vars only when enabled). `apps/web/server/oidc-service.ts` does
+      `.well-known/openid-configuration` discovery + authorization-code flow with `fetch` (no new
+      dependency — works with any spec-compliant provider, not authentik-specific).
+      `/api/auth/oidc/login` + `/api/auth/oidc/callback`, `state` validated via cookie match.
+      `/login` shows "Sign in with SSO" only when enabled. `nonce` is generated/sent but not
+      verified against the ID token (userinfo endpoint is used instead of decoding the ID token —
+      see `docs/AUTHENTICATION.md` for the trade-off).
+- [x] **High — protect every route with middleware.** `apps/web/middleware.ts` gates everything
+      except `/login`, `/api/auth/*`, `/api/health`. Real bug hit and fixed while building this:
+      middleware runs on the Edge runtime, which can't load `node:crypto` — importing
+      `SESSION_COOKIE_NAME` from `auth-service.ts` broke the production build
+      (`next build` failed with `UnhandledSchemeError` on `node:crypto`) until the constant was
+      moved to a dependency-free `apps/web/lib/session-cookie.ts`. Confirmed fixed via a real
+      `next build` (middleware bundled at 34.2 kB, build succeeds). Note: middleware only checks
+      cookie *presence*, not DB-backed expiry (Prisma isn't available on the Edge runtime either) —
+      see the "Middleware Scope" section in `docs/AUTHENTICATION.md`.
+- [ ] **High — middleware test coverage.** Not done — Next.js middleware integration testing (vs.
+      unit-testing the service layer, which is covered below) needs either a running dev server or
+      Next's own test harness; left as a follow-up rather than faking it with a shallow test.
+- [x] **Medium — document both auth modes.** Added `docs/AUTHENTICATION.md` (both modes, issuer
+      URL format, fixed callback path, scopes, client secret storage, middleware scope/limitations)
+      and updated `docs/SECURITY.md`'s auth description.
+- [x] **Low — auth-service/oidc-service unit tests.** `tests/auth-service.test.ts` (7 tests) and
+      `tests/oidc-service.test.ts` (7 tests) added. Full suite verified green: `npm run typecheck`,
+      `npm run lint`, `npm run test` (66/66 passing), and `npm run build` all pass for real.
