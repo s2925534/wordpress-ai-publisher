@@ -145,3 +145,54 @@ confirming it. Recommend testing with a real key only after fix #1 below lands.
       to prove the wiring in fix #1 actually happens, not just that `MockAIProvider`
       behaves correctly in isolation (which is all `tests/ai-provider.test.ts`
       currently proves).
+
+---
+
+## TODO — Authentication (Local Credentials + Optional SSO) (added 2026-07-12)
+
+Every route today — `/`, `/dashboard`, `/settings`, `/site-discovery`, `/new-package`,
+`/packages/[id]`, and all `/api/*` except `/api/health` — is completely unauthenticated. Anyone who
+can reach the container can read/write the configured OpenAI key and WordPress credentials via
+`/api/settings`. This needs fixing, but this app is meant to be usable two ways: standalone by
+anyone who self-hosts it with no dependency on any particular identity provider, and behind the
+maintainer's own SSO gateway (`../nas-sso-gateway`, authentik). So auth needs two modes: a local
+username/email/password login that always works with zero external dependency, and an optional
+OIDC login (against authentik or any other OIDC provider) that can be turned on via env vars
+without being required.
+
+- [ ] **Critical — add a `User` model + migration.** Extend `apps/web/prisma/schema.prisma` with
+      a `User` table (`id`, `email`, `passwordHash`, `createdAt`, `updatedAt`); generate the
+      migration. Add `apps/web/server/auth-service.ts`: password hashing (argon2 or bcrypt) and
+      session issuance (signed cookie).
+- [ ] **Critical — local login routes + bootstrap admin.** Add a `/login` page and
+      `/api/auth/login` / `/api/auth/logout` routes. Bootstrap the first admin user from
+      `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars on first boot (in `docker-entrypoint.sh` or a
+      Prisma seed step) when the `User` table is empty — mirrors this project's own
+      `docker-entrypoint.sh` pattern and `../nas-sso-gateway`'s
+      `AUTHENTIK_BOOTSTRAP_EMAIL`/`AUTHENTIK_BOOTSTRAP_PASSWORD` convention. Add
+      `ADMIN_EMAIL`/`ADMIN_PASSWORD`/`SESSION_SECRET` to `.env.example`.
+- [ ] **Critical — optional OIDC SSO, env-gated and off by default.** Add `ENABLE_OIDC_SSO`
+      (default `false`), `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` env vars,
+      validated in `apps/web/server/env.ts` only when enabled. Add
+      `apps/web/server/oidc-service.ts` implementing the OIDC authorization-code flow. Add
+      `/api/auth/oidc/login` (redirect to issuer) and `/api/auth/oidc/callback` (fixed path —
+      redirect URI is always `APP_URL` + this path, no separate redirect-URI env var needed;
+      validate `state`/`nonce`). `/login` shows a "Sign in with SSO" option only when
+      `ENABLE_OIDC_SSO=true`, alongside the local form.
+- [ ] **High — protect every route with middleware.** Add `apps/web/middleware.ts` requiring a
+      valid session for everything except `/login`, `/api/auth/*`, and `/api/health`.
+      `/api/health` must stay open — it's what `../synology-site-deployer`'s
+      `deploy --health-path /api/health` and Watchtower poll; breaking it breaks deploys.
+- [ ] **High — middleware test coverage.** Extend the existing `tests/*.test.ts` pattern with
+      cases confirming an unauthenticated request to each protected route is redirected/401'd, and
+      an authenticated one passes through.
+- [ ] **Medium — document both auth modes.** Add `docs/AUTHENTICATION.md` covering: local login
+      (default, zero dependency), how to enable OIDC instead/alongside it, the OIDC issuer URL
+      format, the fixed callback path, requested scopes (`openid profile email`), and where the
+      client secret lives (`.env`, never committed) — this is the per-app detail that
+      `../nas-sso-gateway/docs/multi-app-rollout.md` says belongs in the app's own repo, not in the
+      SSO gateway repo. Update `docs/SECURITY.md`'s current "no user-facing auth" description to
+      match the new reality.
+- [ ] **Low — auth-service/oidc-service unit tests.** Cover password hashing/verification,
+      session issuance/expiry, and OIDC `state`/`nonce` validation, following the existing
+      `tests/*.test.ts` conventions.
