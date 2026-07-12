@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "bootstrap-admin": "tsx server/bootstrap-admin.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

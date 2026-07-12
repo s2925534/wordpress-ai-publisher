@@ -11,4 +11,10 @@ set -e
 # location, and Docker's COPY of a symlink loses that relative context.
 node node_modules/prisma/build/index.js migrate deploy --schema=apps/web/prisma/schema.prisma
 
+# Seeds the first local admin user from ADMIN_EMAIL/ADMIN_PASSWORD on an
+# empty database only; a no-op on every later boot once a user exists (see
+# server/bootstrap-admin.ts). Same real-file rationale as the prisma
+# invocation above -- node_modules/.bin/tsx is also a symlink.
+node node_modules/tsx/dist/cli.mjs apps/web/server/bootstrap-admin.ts
+
 exec "$@"
