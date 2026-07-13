@@ -15,6 +15,11 @@ node node_modules/prisma/build/index.js migrate deploy --schema=apps/web/prisma/
 # empty database only; a no-op on every later boot once a user exists (see
 # server/bootstrap-admin.ts). Same real-file rationale as the prisma
 # invocation above -- node_modules/.bin/tsx is also a symlink.
-node node_modules/tsx/dist/cli.mjs apps/web/server/bootstrap-admin.ts
+#
+# TSX_TSCONFIG_PATH is required here: tsx's tsconfig discovery walks up from
+# WORKDIR (/app), which has no tsconfig.json of its own (only apps/web/ does,
+# and tsx doesn't look into subdirectories) -- without it, the `@/*` path
+# alias used by server/auth-service.ts fails to resolve at runtime.
+TSX_TSCONFIG_PATH=apps/web/tsconfig.json node node_modules/tsx/dist/cli.mjs apps/web/server/bootstrap-admin.ts
 
 exec "$@"
