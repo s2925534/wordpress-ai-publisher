@@ -47,6 +47,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/prisma ./apps/web/prisma
 # not bundled into the JS build.
 COPY --from=builder --chown=nextjs:nodejs /app/config ./config
 
+# docker-entrypoint.sh runs bootstrap-admin.ts directly via tsx (not through
+# the Next.js bundle), so its raw TS source and the modules it imports must
+# exist in the image separately from the compiled .next output above.
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/server ./apps/web/server
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/lib ./apps/web/lib
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/tsconfig.json ./apps/web/tsconfig.json
+
 # SQLite database lives on a volume mounted here so it survives image
 # updates/container recreation (see infra/web/docker-compose.web.yml).
 RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
