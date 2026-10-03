@@ -161,14 +161,14 @@ export function NewPackageClient({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="source-safety">
+          <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor="source-safety">
             Source safety
           </label>
           <select
             id="source-safety"
             value={sourceSafetyType}
             onChange={(event) => setSourceSafetyType(event.target.value as (typeof sourceSafetyOptions)[number]['value'])}
-            className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-xs outline-hidden focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
           >
             {sourceSafetyOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -179,7 +179,7 @@ export function NewPackageClient({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="input-text">
+          <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor="input-text">
             Rough text or notes
           </label>
           <Textarea
@@ -222,7 +222,7 @@ export function NewPackageClient({
 
       {isSafeguardsOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs"
           role="dialog"
           aria-modal="true"
           aria-label="AI safeguards"
@@ -337,7 +337,7 @@ export function NewPackageClient({
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" />
@@ -352,7 +352,7 @@ function ChipDetail({ label, items }: { label: string; items: string[] }) {
   const copyValue = cleanItems.join(', ');
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={copyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />

@@ -312,7 +312,7 @@ function EditableField({
     : 'bg-white/95';
 
   return (
-    <div className={isInvalid ? 'space-y-2 rounded-2xl border border-red-300 bg-red-50/60 p-4 shadow-sm' : 'space-y-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm'}>
+    <div className={isInvalid ? 'space-y-2 rounded-2xl border border-red-300 bg-red-50/60 p-4 shadow-xs' : 'space-y-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-xs'}>
       <div className="flex items-center justify-between gap-3">
         <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
           {label}
@@ -353,7 +353,7 @@ function TaxonomySelector<T>({
   const remainingSuggestions = suggestions.filter((item) => !selectedKeys.has(getKey(item)));
 
   return (
-    <section className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
+    <section className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-xs">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-bold text-slate-900">{label}</h3>
         <CopyButton value={selectedCopyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />
@@ -419,7 +419,7 @@ function Field({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
+      <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor={id}>
         {label}
       </label>
       <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
@@ -431,7 +431,7 @@ function Preview({ label, value, copyable = true }: { label: string; value: stri
   const isWarning = value !== 'None' && ['SEO warnings', 'Alt text validation'].includes(label) && value !== 'Valid';
 
   return (
-    <div className={isWarning ? 'rounded-2xl border border-red-300 bg-red-50/70 px-4 py-3 shadow-sm' : 'rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm'}>
+    <div className={isWarning ? 'rounded-2xl border border-red-300 bg-red-50/70 px-4 py-3 shadow-xs' : 'rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-xs'}>
       <div className="flex items-start justify-between gap-3">
         <p className={isWarning ? 'text-xs font-bold uppercase tracking-wide text-red-800' : 'text-xs font-bold uppercase tracking-wide text-slate-700'}>{label}</p>
         {copyable ? <CopyButton value={value} className="h-8 rounded-lg px-3 py-1 text-xs" /> : null}
@@ -459,7 +459,7 @@ function ImagePreview({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-700">Image preview</p>
         <CopyButton value={copyValue || 'No image generated yet'} className="h-8 rounded-lg px-3 py-1 text-xs" />
@@ -470,7 +470,7 @@ function ImagePreview({
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+            className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             aria-label="Open larger image preview"
           >
             <img
@@ -529,7 +529,7 @@ function ImageLightbox({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label="Large image preview"
@@ -547,7 +547,7 @@ function ImageLightbox({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-full bg-white px-3 py-1 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-300"
+          className="absolute right-4 top-4 z-10 rounded-full bg-white px-3 py-1 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-slate-100 focus:outline-hidden focus:ring-2 focus:ring-teal-300"
           aria-label="Close image preview"
           autoFocus
         >
@@ -575,7 +575,7 @@ function ChipPreview({ label, items }: { label: string; items: string[] }) {
   const copyValue = items.join(', ');
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-700">{label}</p>
         <CopyButton value={copyValue} className="h-8 rounded-lg px-3 py-1 text-xs" />

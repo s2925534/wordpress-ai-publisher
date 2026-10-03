@@ -51,7 +51,7 @@ export function AiSafeguardsEditor({ safeguards, selectedId, onChange }: Props) 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-800" htmlFor="ai-safeguard-select">
+        <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor="ai-safeguard-select">
           Active safeguard
         </label>
         <select
@@ -63,7 +63,7 @@ export function AiSafeguardsEditor({ safeguards, selectedId, onChange }: Props) 
               selectedId: event.target.value
             })
           }
-          className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+          className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-xs outline-hidden focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
         >
           {normalizedSafeguards.map((item) => (
             <option key={item.id} value={item.id}>
@@ -75,7 +75,7 @@ export function AiSafeguardsEditor({ safeguards, selectedId, onChange }: Props) 
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-800" htmlFor="ai-safeguard-name">
+        <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor="ai-safeguard-name">
           Safeguard name
         </label>
         <Input
@@ -87,7 +87,7 @@ export function AiSafeguardsEditor({ safeguards, selectedId, onChange }: Props) 
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-800" htmlFor="ai-safeguard-guidelines">
+        <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor="ai-safeguard-guidelines">
           Generation safeguards and guidelines
         </label>
         <Textarea

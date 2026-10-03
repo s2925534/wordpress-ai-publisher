@@ -13,9 +13,9 @@ const includedCapabilities = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(30,41,59,0.14),_transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,118,110,0.15),transparent_30%),radial-gradient(circle_at_top_right,rgba(30,41,59,0.14),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-6 py-10 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-8 shadow-soft backdrop-blur">
+        <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-8 shadow-soft backdrop-blur-sm">
           <div className="flex flex-wrap items-center gap-3">
             <Badge>Publishing assistant</Badge>
             <span className="text-sm text-slate-600">Generic, config-driven, local-first</span>
@@ -83,7 +83,7 @@ export default function HomePage() {
             <CardContent className="space-y-4 text-sm text-slate-700">
               <p>
                 The first meaningful user action is the one-command bootstrap:
-                <code className="ml-1 rounded bg-slate-100 px-2 py-1 text-xs">./scripts/quick-start.sh</code>
+                <code className="ml-1 rounded-sm bg-slate-100 px-2 py-1 text-xs">./scripts/quick-start.sh</code>
               </p>
               <p>
                 After startup, credentials and site settings live in the app UI or JSON config

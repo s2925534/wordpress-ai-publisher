@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 const readPluginZipMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/server/plugin-package-service', () => ({
-  PluginPackageService: vi.fn().mockImplementation(() => ({
-    readPluginZip: readPluginZipMock
-  }))
+  PluginPackageService: vi.fn().mockImplementation(function () {
+    return { readPluginZip: readPluginZipMock };
+  })
 }));
 
 import { GET } from '@/app/api/plugin/package/route';

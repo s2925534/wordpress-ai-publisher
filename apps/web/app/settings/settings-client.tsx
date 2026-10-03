@@ -511,7 +511,7 @@ function Field({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
+      <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor={id}>
         {label}
       </label>
       <Input
@@ -543,14 +543,14 @@ function SelectField({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-semibold text-slate-800" htmlFor={id}>
+      <label className="block text-sm leading-6 font-semibold text-slate-800" htmlFor={id}>
         {label}
       </label>
       <select
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+        className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-xs outline-hidden focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

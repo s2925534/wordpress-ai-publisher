@@ -18,6 +18,15 @@
     "quick-start": "bash scripts/quick-start.sh"
   },
   "devDependencies": {
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "postcss": "^8.5.28"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "^8.0.2"
+    },
+    "next": {
+      "postcss": "$postcss"
+    }
   }
 }

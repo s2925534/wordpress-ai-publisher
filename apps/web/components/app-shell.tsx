@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
-      <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">

@@ -12,9 +12,9 @@ export default async function DashboardPage() {
   const status = settings.completion;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.15),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,118,110,0.15),transparent_30%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-6 py-10 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        <header className="rounded-3xl border border-slate-200/80 bg-white/85 p-8 shadow-soft backdrop-blur">
+        <header className="rounded-3xl border border-slate-200/80 bg-white/85 p-8 shadow-soft backdrop-blur-sm">
           <Badge>Dashboard</Badge>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">WordPress AI Publishing Assistant</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
