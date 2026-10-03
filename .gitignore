@@ -28,3 +28,6 @@ apps/web/*.db
 apps/web/*.sqlite
 apps/web/*.sqlite-journal
 apps/web/prisma/migrations/*.lock
+
+# Verbatim journal index: machine-local transcript paths, not portable
+/agent-context/journal-verbatim/
